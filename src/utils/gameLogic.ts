@@ -100,13 +100,22 @@ export const getTemperatureEmoji = (
 
 export const getMessageForFeedback = (
   feedback: 'too-high' | 'too-low' | 'correct',
-  _distance: 'hot' | 'warm' | 'cold'
+  distance: 'hot' | 'warm' | 'cold'
 ): string => {
   if (feedback === 'correct') {
     return '🎉 Congratulations! You guessed it!';
   }
 
   const direction = feedback === 'too-high' ? 'lower' : 'higher';
+  let temperatureHint = '';
 
-  return `Too ${feedback.split('-')[1]}! Try ${direction}`;
+  if (distance === 'hot') {
+    temperatureHint = "... You're very close!";
+  } else if (distance === 'warm') {
+    temperatureHint = "... You're getting warmer";
+  } else {
+    temperatureHint = "... You're cold";
+  }
+
+  return `Too ${feedback.split('-')[1]}! Try ${direction}${temperatureHint}`;
 };

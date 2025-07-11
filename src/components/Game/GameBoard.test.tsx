@@ -3,6 +3,7 @@ import { render } from '@testing-library/react';
 import { GameBoard } from './GameBoard';
 import { useGameStore } from '../../store/gameStore';
 import { usePlayerStore } from '../../store/playerStore';
+import type { Player } from '../../types';
 
 // Mock the stores
 vi.mock('../../store/gameStore');
@@ -19,9 +20,27 @@ describe('GameBoard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    // Mock with complete PlayerStore interface
+    const mockPlayer: Player = {
+      id: 'player-1',
+      name: 'Alice',
+      gamesPlayed: 0,
+      gamesWon: 0,
+      totalGuesses: 0,
+      bestGame: 5,
+      averageGuesses: 0,
+      lastPlayed: new Date(),
+    };
+
     mockUsePlayerStore.mockReturnValue({
-      currentPlayer: { id: 'player-1', name: 'Alice', bestGame: 5 },
+      players: [],
+      currentPlayer: mockPlayer,
+      loadPlayers: vi.fn(),
+      createPlayer: vi.fn().mockReturnValue(mockPlayer),
+      selectPlayer: vi.fn(),
       updatePlayerStats: mockUpdatePlayerStats,
+      incrementGamesPlayed: vi.fn(),
+      getCurrentPlayer: vi.fn().mockReturnValue(mockPlayer),
     });
   });
 
@@ -40,10 +59,13 @@ describe('GameBoard', () => {
     mockUseGameStore.mockReturnValue({
       gameStatus: 'playing',
       currentGame,
+      targetNumber: 42,
       guesses: [50, 25, 35],
       guessResults: [],
       startNewGame: mockStartNewGame,
+      makeGuess: vi.fn(),
       resetGame: mockResetGame,
+      loadGameHistory: vi.fn().mockReturnValue([]),
     });
 
     const { rerender } = render(<GameBoard />);
@@ -55,10 +77,13 @@ describe('GameBoard', () => {
     mockUseGameStore.mockReturnValue({
       gameStatus: 'won',
       currentGame,
+      targetNumber: 42,
       guesses: [50, 25, 35, 42],
       guessResults: [],
       startNewGame: mockStartNewGame,
+      makeGuess: vi.fn(),
       resetGame: mockResetGame,
+      loadGameHistory: vi.fn().mockReturnValue([]),
     });
 
     rerender(<GameBoard />);
@@ -87,10 +112,13 @@ describe('GameBoard', () => {
     mockUseGameStore.mockReturnValue({
       gameStatus: 'won',
       currentGame,
+      targetNumber: 42,
       guesses: [50, 25, 35, 42],
       guessResults: [],
       startNewGame: mockStartNewGame,
+      makeGuess: vi.fn(),
       resetGame: mockResetGame,
+      loadGameHistory: vi.fn().mockReturnValue([]),
     });
 
     render(<GameBoard />);

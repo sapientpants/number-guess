@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { PlayerProfile } from './PlayerProfile';
 import { usePlayerStore } from '../../store/playerStore';
 import { useLeaderboardStore } from '../../store/leaderboardStore';
+import type { Player } from '../../types';
 
 vi.mock('../../store/playerStore');
 vi.mock('../../store/leaderboardStore');
@@ -11,33 +12,52 @@ describe('PlayerProfile', () => {
   const mockUpdateLeaderboard = vi.fn();
   const mockGetPlayerRank = vi.fn();
 
+  const createMockPlayer = (overrides: Partial<Player> = {}): Player => ({
+    id: 'player-1',
+    name: 'Test Player',
+    gamesPlayed: 0,
+    gamesWon: 0,
+    totalGuesses: 0,
+    bestGame: 0,
+    averageGuesses: 0,
+    lastPlayed: new Date(),
+    ...overrides,
+  });
+
+  const mockPlayerStore = (player: Player) => {
+    vi.mocked(usePlayerStore).mockReturnValue({
+      players: [player],
+      currentPlayer: player,
+      loadPlayers: vi.fn(),
+      createPlayer: vi.fn().mockReturnValue(player),
+      selectPlayer: vi.fn(),
+      updatePlayerStats: vi.fn(),
+      incrementGamesPlayed: vi.fn(),
+      getCurrentPlayer: vi.fn().mockReturnValue(player),
+    });
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
 
     vi.mocked(useLeaderboardStore).mockReturnValue({
+      entries: [],
       updateLeaderboard: mockUpdateLeaderboard,
       getPlayerRank: mockGetPlayerRank,
-    } as any);
+    });
   });
 
   describe('win rate calculation', () => {
     it('should calculate win rate correctly for players with wins', () => {
-      const mockPlayer = {
-        id: 'player-1',
-        name: 'Test Player',
+      const mockPlayer = createMockPlayer({
         gamesPlayed: 10,
         gamesWon: 7,
         totalGuesses: 105,
         bestGame: 10,
         averageGuesses: 15,
-        lastPlayed: new Date(),
-      };
+      });
 
-      vi.mocked(usePlayerStore).mockReturnValue({
-        currentPlayer: mockPlayer,
-        players: [mockPlayer],
-        selectPlayer: vi.fn(),
-      } as any);
+      mockPlayerStore(mockPlayer);
 
       render(<PlayerProfile />);
 
@@ -62,7 +82,7 @@ describe('PlayerProfile', () => {
         currentPlayer: mockPlayer,
         players: [mockPlayer],
         selectPlayer: vi.fn(),
-      } as any);
+      });
 
       render(<PlayerProfile />);
 
@@ -86,7 +106,7 @@ describe('PlayerProfile', () => {
         currentPlayer: mockPlayer,
         players: [mockPlayer],
         selectPlayer: vi.fn(),
-      } as any);
+      });
 
       render(<PlayerProfile />);
 
@@ -110,7 +130,7 @@ describe('PlayerProfile', () => {
         currentPlayer: mockPlayer,
         players: [mockPlayer],
         selectPlayer: vi.fn(),
-      } as any);
+      });
 
       render(<PlayerProfile />);
 
@@ -144,7 +164,7 @@ describe('PlayerProfile', () => {
           currentPlayer: mockPlayer,
           players: [mockPlayer],
           selectPlayer: vi.fn(),
-        } as any);
+        });
 
         const { unmount } = render(<PlayerProfile />);
 
@@ -172,7 +192,7 @@ describe('PlayerProfile', () => {
         currentPlayer: mockPlayer,
         players: [mockPlayer],
         selectPlayer: vi.fn(),
-      } as any);
+      });
 
       render(<PlayerProfile />);
 
@@ -196,7 +216,7 @@ describe('PlayerProfile', () => {
         currentPlayer: mockPlayer,
         players: [mockPlayer],
         selectPlayer: vi.fn(),
-      } as any);
+      });
 
       render(<PlayerProfile />);
 
@@ -223,7 +243,7 @@ describe('PlayerProfile', () => {
         currentPlayer: mockPlayer,
         players: [mockPlayer],
         selectPlayer: vi.fn(),
-      } as any);
+      });
 
       mockGetPlayerRank.mockReturnValue(3);
 
@@ -245,22 +265,21 @@ describe('PlayerProfile', () => {
 
   describe('edge cases', () => {
     it('should handle undefined gamesWon gracefully', () => {
-      const mockPlayer = {
+      const mockPlayer = createMockPlayer({
         id: 'player-8',
         name: 'Legacy Player',
         gamesPlayed: 10,
-        // gamesWon is undefined (simulating old data)
+        gamesWon: undefined as unknown as number, // Simulating old data
         totalGuesses: 100,
         bestGame: 10,
         averageGuesses: 10,
-        lastPlayed: new Date(),
-      } as any;
+      });
 
       vi.mocked(usePlayerStore).mockReturnValue({
         currentPlayer: mockPlayer,
         players: [mockPlayer],
         selectPlayer: vi.fn(),
-      } as any);
+      });
 
       render(<PlayerProfile />);
 
@@ -274,7 +293,7 @@ describe('PlayerProfile', () => {
         currentPlayer: null,
         players: [],
         selectPlayer: vi.fn(),
-      } as any);
+      });
 
       const { container } = render(<PlayerProfile />);
 

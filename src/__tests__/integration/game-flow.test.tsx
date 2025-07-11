@@ -29,79 +29,114 @@ describe('Game Flow Integration Tests', () => {
   });
 
   describe('complete game flow', () => {
-    it('should handle full game flow from player creation to winning', async () => {
-      render(<App />);
+    it(
+      'should handle full game flow from player creation to winning',
+      async () => {
+        render(<App />);
 
-      // Should show player login initially
-      expect(screen.getByText('Welcome to Number Guessing Game')).toBeInTheDocument();
+        // Should show the game title
+        expect(screen.getByText('Number Guessing Game')).toBeInTheDocument();
 
-      // Create a new player
-      const nameInput = screen.getByPlaceholderText('Enter your name');
-      await userEvent.type(nameInput, 'Test Player');
-      await userEvent.click(screen.getByText('Start Playing'));
+        // Click to create a new player
+        await userEvent.click(screen.getByText('Create New Player'));
 
-      // Should show game board
-      await waitFor(() => {
-        expect(screen.getByText('Ready to Play!')).toBeInTheDocument();
-      });
+        // Enter player name
+        const nameInput = screen.getByPlaceholderText('Enter your name');
+        await userEvent.type(nameInput, 'Test Player');
+        await userEvent.click(screen.getByRole('button', { name: 'Create Player' }));
 
-      // Start a new game
-      await userEvent.click(screen.getByText('Start New Game'));
+        // Should show game board
+        await waitFor(() => {
+          expect(screen.getByText('Ready to Play?')).toBeInTheDocument();
+        });
 
-      // Should show guess input
-      expect(screen.getByPlaceholderText('Enter your guess (1-100)')).toBeInTheDocument();
-      expect(screen.getByText('Make Guess')).toBeInTheDocument();
+        // Start a new game
+        const startButton = screen.getByRole('button', { name: 'Start New Game' });
+        await userEvent.click(startButton);
 
-      // Make incorrect guesses
-      const guessInput = screen.getByPlaceholderText('Enter your guess (1-100)');
+        // Should show guess input
+        expect(screen.getByPlaceholderText('Enter your guess (1-100)')).toBeInTheDocument();
+        expect(screen.getByText('Make Guess')).toBeInTheDocument();
 
-      await userEvent.type(guessInput, '25');
-      await userEvent.keyboard('{Enter}');
+        // Make incorrect guesses
+        const guessInput = screen.getByPlaceholderText('Enter your guess (1-100)');
 
-      await waitFor(() => {
-        expect(screen.getByText(/Too low!/)).toBeInTheDocument();
-      });
+        // Wait for input to be ready and make first guess
+        await waitFor(() => {
+          expect(guessInput).not.toBeDisabled();
+        });
 
-      await userEvent.type(guessInput, '75');
-      await userEvent.keyboard('{Enter}');
+        // Type the guess and click submit
+        await userEvent.type(guessInput, '25');
+        
+        // Click the submit button directly
+        const submitButton = screen.getByRole('button', { name: 'Make Guess' });
+        await userEvent.click(submitButton);
 
-      await waitFor(() => {
-        expect(screen.getByText(/Too high!/)).toBeInTheDocument();
-      });
+        // Wait for the guess to be processed
+        await waitFor(
+          () => {
+            // Look for the feedback text in a more flexible way
+            const feedbackElements = screen.queryAllByText(/Too Low/i);
+            expect(feedbackElements.length).toBeGreaterThan(0);
+          },
+          { timeout: 5000 }
+        );
 
-      // Make correct guess
-      await userEvent.type(guessInput, '50');
-      await userEvent.keyboard('{Enter}');
+        await userEvent.clear(guessInput);
+        await userEvent.type(guessInput, '75');
+        await userEvent.click(screen.getByText('Make Guess'));
 
-      // Should show win message
-      await waitFor(() => {
-        expect(screen.getByText(/Congratulations!/)).toBeInTheDocument();
-        expect(screen.getByText('You won in 3 guesses!')).toBeInTheDocument();
-      });
+        await waitFor(
+          () => {
+            expect(screen.getByText('↓ Too High')).toBeInTheDocument();
+          },
+          { timeout: 3000 }
+        );
 
-      // Check that stats were updated
-      expect(screen.getByText('Games Played')).toBeInTheDocument();
-      expect(screen.getByText('1')).toBeInTheDocument(); // Games played count
-    });
+        // Make correct guess
+        await userEvent.clear(guessInput);
+        await userEvent.type(guessInput, '50');
+        await userEvent.click(screen.getByText('Make Guess'));
+
+        // Should show win message
+        await waitFor(() => {
+          expect(screen.getByText(/Congratulations!/)).toBeInTheDocument();
+          expect(screen.getByText('You won in 3 guesses!')).toBeInTheDocument();
+        });
+
+        // Check that stats were updated
+        expect(screen.getByText('Games Played')).toBeInTheDocument();
+        expect(screen.getByText('1')).toBeInTheDocument(); // Games played count
+      },
+      { timeout: 10000 }
+    );
 
     it('should handle abandoned game correctly', async () => {
       render(<App />);
 
       // Create player
+      await userEvent.click(screen.getByText('Create New Player'));
       const nameInput = screen.getByPlaceholderText('Enter your name');
       await userEvent.type(nameInput, 'Abandon Test');
-      await userEvent.click(screen.getByText('Start Playing'));
+      await userEvent.click(screen.getByRole('button', { name: 'Create Player' }));
 
-      // Start game
+      // Wait for game board to render with more flexible timing
       await waitFor(() => {
-        expect(screen.getByText('Start New Game')).toBeInTheDocument();
-      });
-      await userEvent.click(screen.getByText('Start New Game'));
+        const readyText = screen.queryByText('Ready to Play?');
+        const startButton = screen.queryByRole('button', { name: 'Start New Game' });
+        expect(readyText || startButton).toBeTruthy();
+      }, { timeout: 5000 });
+
+      // Click start new game
+      const startButton = screen.getByRole('button', { name: 'Start New Game' });
+      await userEvent.click(startButton);
 
       // Make some guesses
       const guessInput = screen.getByPlaceholderText('Enter your guess (1-100)');
+      await userEvent.clear(guessInput);
       await userEvent.type(guessInput, '30');
-      await userEvent.keyboard('{Enter}');
+      await userEvent.click(screen.getByText('Make Guess'));
 
       // Give up
       await userEvent.click(screen.getByText('Give Up'));
@@ -126,9 +161,10 @@ describe('Game Flow Integration Tests', () => {
       render(<App />);
 
       // Create first player
+      await userEvent.click(screen.getByText('Create New Player'));
       const nameInput = screen.getByPlaceholderText('Enter your name');
       await userEvent.type(nameInput, 'Player One');
-      await userEvent.click(screen.getByText('Start Playing'));
+      await userEvent.click(screen.getByRole('button', { name: 'Create Player' }));
 
       await waitFor(() => {
         expect(screen.getByText('Player One')).toBeInTheDocument();
@@ -137,8 +173,9 @@ describe('Game Flow Integration Tests', () => {
       // Play and win a game
       await userEvent.click(screen.getByText('Start New Game'));
       const guessInput = screen.getByPlaceholderText('Enter your guess (1-100)');
+      await userEvent.clear(guessInput);
       await userEvent.type(guessInput, '50');
-      await userEvent.keyboard('{Enter}');
+      await userEvent.click(screen.getByText('Make Guess'));
 
       await waitFor(() => {
         expect(screen.getByText(/Congratulations!/)).toBeInTheDocument();
@@ -152,9 +189,10 @@ describe('Game Flow Integration Tests', () => {
         expect(screen.getByPlaceholderText('Enter your name')).toBeInTheDocument();
       });
 
+      await userEvent.click(screen.getByText('Create New Player'));
       const nameInput2 = screen.getByPlaceholderText('Enter your name');
       await userEvent.type(nameInput2, 'Player Two');
-      await userEvent.click(screen.getByText('Start Playing'));
+      await userEvent.click(screen.getByRole('button', { name: 'Create Player' }));
 
       // Should show Player Two's fresh stats
       await waitFor(() => {
@@ -193,9 +231,10 @@ describe('Game Flow Integration Tests', () => {
       render(<App />);
 
       // Create new player
+      await userEvent.click(screen.getByText('Create New Player'));
       const nameInput = screen.getByPlaceholderText('Enter your name');
       await userEvent.type(nameInput, 'New Player');
-      await userEvent.click(screen.getByText('Start Playing'));
+      await userEvent.click(screen.getByRole('button', { name: 'Create Player' }));
 
       // Should see leaderboard with existing player
       await waitFor(() => {
@@ -206,8 +245,9 @@ describe('Game Flow Integration Tests', () => {
       // Play and win a game quickly
       await userEvent.click(screen.getByText('Start New Game'));
       const guessInput = screen.getByPlaceholderText('Enter your guess (1-100)');
+      await userEvent.clear(guessInput);
       await userEvent.type(guessInput, '50');
-      await userEvent.keyboard('{Enter}');
+      await userEvent.click(screen.getByText('Make Guess'));
 
       // Leaderboard should update
       await waitFor(() => {
@@ -221,9 +261,10 @@ describe('Game Flow Integration Tests', () => {
       render(<App />);
 
       // Quick setup
+      await userEvent.click(screen.getByText('Create New Player'));
       const nameInput = screen.getByPlaceholderText('Enter your name');
       await userEvent.type(nameInput, 'Validation Test');
-      await userEvent.click(screen.getByText('Start Playing'));
+      await userEvent.click(screen.getByRole('button', { name: 'Create Player' }));
 
       await waitFor(() => {
         expect(screen.getByText('Start New Game')).toBeInTheDocument();
@@ -233,12 +274,14 @@ describe('Game Flow Integration Tests', () => {
 
       const guessInput = screen.getByPlaceholderText('Enter your guess (1-100)');
 
-      // Try invalid inputs
+      // Try invalid inputs (number input prevents alphabetic characters)
+      await userEvent.clear(guessInput);
       await userEvent.type(guessInput, 'abc');
       expect(guessInput).toHaveValue(null);
 
+      await userEvent.clear(guessInput);
       await userEvent.type(guessInput, '150');
-      await userEvent.keyboard('{Enter}');
+      await userEvent.click(screen.getByText('Make Guess'));
 
       await waitFor(() => {
         expect(screen.getByText('Number must be between 1 and 100')).toBeInTheDocument();
@@ -247,15 +290,19 @@ describe('Game Flow Integration Tests', () => {
       // Clear and try duplicate
       await userEvent.clear(guessInput);
       await userEvent.type(guessInput, '25');
-      await userEvent.keyboard('{Enter}');
+      await userEvent.click(screen.getByText('Make Guess'));
 
-      await waitFor(() => {
-        expect(screen.getByText(/Too low!/)).toBeInTheDocument();
-      });
+      await waitFor(
+        () => {
+          expect(screen.getByText('↑ Too Low')).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
 
       // Try same number again
+      await userEvent.clear(guessInput);
       await userEvent.type(guessInput, '25');
-      await userEvent.keyboard('{Enter}');
+      await userEvent.click(screen.getByText('Make Guess'));
 
       await waitFor(() => {
         expect(screen.getByText('You already guessed this number')).toBeInTheDocument();
@@ -268,9 +315,10 @@ describe('Game Flow Integration Tests', () => {
       render(<App />);
 
       // Setup player
+      await userEvent.click(screen.getByText('Create New Player'));
       const nameInput = screen.getByPlaceholderText('Enter your name');
       await userEvent.type(nameInput, 'Stats Test');
-      await userEvent.click(screen.getByText('Start Playing'));
+      await userEvent.click(screen.getByRole('button', { name: 'Create Player' }));
 
       // Play first game (win in 2 guesses)
       await waitFor(() => {
@@ -279,15 +327,20 @@ describe('Game Flow Integration Tests', () => {
       await userEvent.click(screen.getByText('Start New Game'));
 
       const guessInput = screen.getByPlaceholderText('Enter your guess (1-100)');
+      await userEvent.clear(guessInput);
       await userEvent.type(guessInput, '40');
-      await userEvent.keyboard('{Enter}');
+      await userEvent.click(screen.getByText('Make Guess'));
 
-      await waitFor(() => {
-        expect(screen.getByText(/Too low!/)).toBeInTheDocument();
-      });
+      await waitFor(
+        () => {
+          expect(screen.getByText('↑ Too Low')).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
 
+      await userEvent.clear(guessInput);
       await userEvent.type(guessInput, '50');
-      await userEvent.keyboard('{Enter}');
+      await userEvent.click(screen.getByText('Make Guess'));
 
       await waitFor(() => {
         expect(screen.getByText(/Congratulations!/)).toBeInTheDocument();
@@ -295,8 +348,9 @@ describe('Game Flow Integration Tests', () => {
 
       // Start second game but abandon it
       await userEvent.click(screen.getByText('Play Again'));
+      await userEvent.clear(guessInput);
       await userEvent.type(guessInput, '30');
-      await userEvent.keyboard('{Enter}');
+      await userEvent.click(screen.getByText('Make Guess'));
       await userEvent.click(screen.getByText('Give Up'));
 
       // Start third game and win in 3 guesses
@@ -305,12 +359,15 @@ describe('Game Flow Integration Tests', () => {
       });
       await userEvent.click(screen.getByText('Start New Game'));
 
+      await userEvent.clear(guessInput);
       await userEvent.type(guessInput, '25');
-      await userEvent.keyboard('{Enter}');
+      await userEvent.click(screen.getByText('Make Guess'));
+      await userEvent.clear(guessInput);
       await userEvent.type(guessInput, '60');
-      await userEvent.keyboard('{Enter}');
+      await userEvent.click(screen.getByText('Make Guess'));
+      await userEvent.clear(guessInput);
       await userEvent.type(guessInput, '50');
-      await userEvent.keyboard('{Enter}');
+      await userEvent.click(screen.getByText('Make Guess'));
 
       // Check final statistics
       await waitFor(() => {

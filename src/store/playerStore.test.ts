@@ -36,7 +36,8 @@ describe('playerStore', () => {
       const store = usePlayerStore.getState();
       const player = store.createPlayer('Bob');
 
-      expect(store.currentPlayer).toEqual(player);
+      const updatedState = usePlayerStore.getState();
+      expect(updatedState.currentPlayer).toEqual(player);
     });
   });
 
@@ -48,7 +49,8 @@ describe('playerStore', () => {
 
       store.incrementGamesPlayed(player.id);
 
-      const updatedPlayer = store.players.find((p) => p.id === player.id);
+      const updatedState = usePlayerStore.getState();
+      const updatedPlayer = updatedState.players.find((p) => p.id === player.id);
       expect(updatedPlayer?.gamesPlayed).toBe(1);
       expect(updatedPlayer?.gamesWon).toBe(initialStats.gamesWon);
       expect(updatedPlayer?.totalGuesses).toBe(initialStats.totalGuesses);
@@ -59,17 +61,22 @@ describe('playerStore', () => {
       const store = usePlayerStore.getState();
       const player = store.createPlayer('David');
 
-      // First win some games
-      store.updatePlayerStats(player.id, 10);
-      store.updatePlayerStats(player.id, 20);
+      // Start and win some games
+      store.incrementGamesPlayed(player.id); // Game 1 started
+      store.updatePlayerStats(player.id, 10); // Game 1 won
 
-      const statsBeforeIncrement = store.players.find((p) => p.id === player.id);
+      store.incrementGamesPlayed(player.id); // Game 2 started
+      store.updatePlayerStats(player.id, 20); // Game 2 won
+
+      const statsBeforeIncrement = usePlayerStore
+        .getState()
+        .players.find((p) => p.id === player.id);
       const averageBeforeIncrement = statsBeforeIncrement?.averageGuesses;
 
       // Increment games played (simulating abandoned game)
-      store.incrementGamesPlayed(player.id);
+      store.incrementGamesPlayed(player.id); // Game 3 started but not won
 
-      const statsAfterIncrement = store.players.find((p) => p.id === player.id);
+      const statsAfterIncrement = usePlayerStore.getState().players.find((p) => p.id === player.id);
       expect(statsAfterIncrement?.averageGuesses).toBe(averageBeforeIncrement);
       expect(statsAfterIncrement?.gamesPlayed).toBe(3);
       expect(statsAfterIncrement?.gamesWon).toBe(2);
@@ -83,7 +90,7 @@ describe('playerStore', () => {
 
       store.updatePlayerStats(player.id, 15);
 
-      const updatedPlayer = store.players.find((p) => p.id === player.id);
+      const updatedPlayer = usePlayerStore.getState().players.find((p) => p.id === player.id);
       expect(updatedPlayer).toMatchObject({
         gamesWon: 1,
         totalGuesses: 15,
@@ -105,7 +112,7 @@ describe('playerStore', () => {
 
       store.incrementGamesPlayed(player.id); // Game 3: started but abandoned
 
-      const updatedPlayer = store.players.find((p) => p.id === player.id);
+      const updatedPlayer = usePlayerStore.getState().players.find((p) => p.id === player.id);
       expect(updatedPlayer).toMatchObject({
         gamesPlayed: 3,
         gamesWon: 2,
@@ -119,15 +126,15 @@ describe('playerStore', () => {
       const player = store.createPlayer('Grace');
 
       store.updatePlayerStats(player.id, 20);
-      let updatedPlayer = store.players.find((p) => p.id === player.id);
+      let updatedPlayer = usePlayerStore.getState().players.find((p) => p.id === player.id);
       expect(updatedPlayer?.bestGame).toBe(20);
 
       store.updatePlayerStats(player.id, 10);
-      updatedPlayer = store.players.find((p) => p.id === player.id);
+      updatedPlayer = usePlayerStore.getState().players.find((p) => p.id === player.id);
       expect(updatedPlayer?.bestGame).toBe(10);
 
       store.updatePlayerStats(player.id, 15);
-      updatedPlayer = store.players.find((p) => p.id === player.id);
+      updatedPlayer = usePlayerStore.getState().players.find((p) => p.id === player.id);
       expect(updatedPlayer?.bestGame).toBe(10); // Should remain 10
     });
 
@@ -138,7 +145,7 @@ describe('playerStore', () => {
       const guesses = [5, 10, 15, 20, 25];
       guesses.forEach((g) => store.updatePlayerStats(player.id, g));
 
-      const updatedPlayer = store.players.find((p) => p.id === player.id);
+      const updatedPlayer = usePlayerStore.getState().players.find((p) => p.id === player.id);
       expect(updatedPlayer).toMatchObject({
         gamesWon: 5,
         totalGuesses: 75,
@@ -149,16 +156,33 @@ describe('playerStore', () => {
   });
 
   describe('selectPlayer', () => {
-    it('should set current player when valid ID provided', () => {
+    it('should set current player when valid ID provided', async () => {
       const store = usePlayerStore.getState();
       const player1 = store.createPlayer('Iris');
+
+      // Add a small delay to ensure different timestamps
+      await new Promise((resolve) => setTimeout(resolve, 10));
       const player2 = store.createPlayer('Jack');
 
-      store.selectPlayer(player1.id);
-      expect(store.currentPlayer).toEqual(player1);
+      // After creating both players, player2 is current
+      const currentState = usePlayerStore.getState();
+      expect(currentState.currentPlayer?.name).toBe('Jack');
+      expect(currentState.currentPlayer?.id).toBe(player2.id);
 
-      store.selectPlayer(player2.id);
-      expect(store.currentPlayer).toEqual(player2);
+      // Verify players are different
+      expect(player1.id).not.toBe(player2.id);
+
+      // Select player1
+      usePlayerStore.getState().selectPlayer(player1.id);
+      const afterSelect1 = usePlayerStore.getState();
+      expect(afterSelect1.currentPlayer?.name).toBe('Iris');
+      expect(afterSelect1.currentPlayer?.id).toBe(player1.id);
+
+      // Select player2 again
+      usePlayerStore.getState().selectPlayer(player2.id);
+      const afterSelect2 = usePlayerStore.getState();
+      expect(afterSelect2.currentPlayer?.name).toBe('Jack');
+      expect(afterSelect2.currentPlayer?.id).toBe(player2.id);
     });
 
     it('should clear current player when empty string provided', () => {
@@ -166,7 +190,7 @@ describe('playerStore', () => {
       store.createPlayer('Kate');
 
       store.selectPlayer('');
-      expect(store.currentPlayer).toBeNull();
+      expect(usePlayerStore.getState().currentPlayer).toBeNull();
       expect(storage.saveCurrentPlayerId).toHaveBeenCalledWith('');
     });
 
@@ -175,7 +199,7 @@ describe('playerStore', () => {
       const player = store.createPlayer('Liam');
 
       store.selectPlayer('invalid-id');
-      expect(store.currentPlayer).toEqual(player);
+      expect(usePlayerStore.getState().currentPlayer).toEqual(player);
     });
   });
 
@@ -210,8 +234,9 @@ describe('playerStore', () => {
       const store = usePlayerStore.getState();
       store.loadPlayers();
 
-      expect(store.players).toEqual(mockPlayers);
-      expect(store.currentPlayer).toEqual(mockPlayers[1]);
+      const updatedState = usePlayerStore.getState();
+      expect(updatedState.players).toEqual(mockPlayers);
+      expect(updatedState.currentPlayer).toEqual(mockPlayers[1]);
     });
 
     it('should handle no current player in storage', () => {
@@ -234,8 +259,9 @@ describe('playerStore', () => {
       const store = usePlayerStore.getState();
       store.loadPlayers();
 
-      expect(store.players).toEqual(mockPlayers);
-      expect(store.currentPlayer).toBeNull();
+      const updatedState = usePlayerStore.getState();
+      expect(updatedState.players).toEqual(mockPlayers);
+      expect(updatedState.currentPlayer).toBeNull();
     });
   });
 
@@ -249,7 +275,8 @@ describe('playerStore', () => {
       store.incrementGamesPlayed(player.id);
       store.incrementGamesPlayed(player.id);
 
-      const updatedPlayer = store.players.find((p) => p.id === player.id);
+      const updatedState = usePlayerStore.getState();
+      const updatedPlayer = updatedState.players.find((p) => p.id === player.id);
       expect(updatedPlayer).toMatchObject({
         gamesPlayed: 3,
         gamesWon: 0,
@@ -276,7 +303,7 @@ describe('playerStore', () => {
       store.incrementGamesPlayed(player.id); // Start game 4
       store.updatePlayerStats(player.id, 10); // Win game 4
 
-      const final = store.players.find((p) => p.id === player.id);
+      const final = usePlayerStore.getState().players.find((p) => p.id === player.id);
       expect(final).toMatchObject({
         gamesPlayed: 4,
         gamesWon: 3,

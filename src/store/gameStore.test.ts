@@ -23,12 +23,17 @@ describe('gameStore', () => {
 
     vi.clearAllMocks();
 
-    // Mock playerStore
+    // Mock playerStore with complete interface
     vi.mocked(usePlayerStore.getState).mockReturnValue({
+      players: [],
+      currentPlayer: null,
+      loadPlayers: vi.fn(),
+      createPlayer: vi.fn(),
+      selectPlayer: vi.fn(),
       incrementGamesPlayed: mockIncrementGamesPlayed,
       updatePlayerStats: mockUpdatePlayerStats,
       getCurrentPlayer: mockGetCurrentPlayer,
-    } as any);
+    });
   });
 
   describe('game state transitions', () => {
