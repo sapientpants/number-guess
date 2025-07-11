@@ -6,3 +6,9 @@ dist/
 .env.local
 .env.*.local
 *.tsbuildinfo
+
+# Coverage reports
+coverage/
+
+# Claude local settings
+.claude/*.local.*
