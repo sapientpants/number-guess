@@ -12,6 +12,12 @@ export const LeaderboardTable: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
+  const getMedalEmoji = (index: number) => {
+    if (index === 0) return '🥇';
+    if (index === 1) return '🥈';
+    return '🥉';
+  };
+
   useEffect(() => {
     updateLeaderboard();
   }, [players, updateLeaderboard]);
@@ -73,7 +79,7 @@ export const LeaderboardTable: React.FC = () => {
                     >
                       <div className="flex items-center space-x-3">
                         <span className="font-bold">
-                          {index + 1}. {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                          {index + 1}. {getMedalEmoji(index)}
                         </span>
                         <span>{entry.playerName}</span>
                         {currentPlayer?.id === entry.playerId && (

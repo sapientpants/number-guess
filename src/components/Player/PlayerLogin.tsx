@@ -104,7 +104,7 @@ export const PlayerLogin = ({ onPlayerSelected }: PlayerLoginProps = {}) => {
         <>
           {players.length > 0 ? (
             <div className="space-y-2 mb-4">
-              {players
+              {[...players]
                 .sort((a, b) => {
                   // Sort by last played, most recent first
                   return new Date(b.lastPlayed).getTime() - new Date(a.lastPlayed).getTime();

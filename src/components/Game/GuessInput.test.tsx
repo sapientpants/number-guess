@@ -45,7 +45,7 @@ describe('GuessInput', () => {
       const input = screen.getByPlaceholderText('Enter your guess (1-100)') as HTMLInputElement;
 
       // Letter keys should be prevented
-      const letterEvent = new KeyboardEvent('keydown', { key: 'a', keyCode: 65 });
+      const letterEvent = new KeyboardEvent('keydown', { key: 'a' });
       fireEvent.keyDown(input, letterEvent);
       expect(input.value).toBe('');
 
@@ -189,17 +189,17 @@ describe('GuessInput', () => {
       const input = screen.getByPlaceholderText('Enter your guess (1-100)') as HTMLInputElement;
 
       // Ctrl+A should be allowed
-      const ctrlA = new KeyboardEvent('keydown', { key: 'a', keyCode: 65, ctrlKey: true });
+      const ctrlA = new KeyboardEvent('keydown', { key: 'a', ctrlKey: true });
       fireEvent.keyDown(input, ctrlA);
       // Event should not be prevented
 
       // Ctrl+C should be allowed
-      const ctrlC = new KeyboardEvent('keydown', { key: 'c', keyCode: 67, ctrlKey: true });
+      const ctrlC = new KeyboardEvent('keydown', { key: 'c', ctrlKey: true });
       fireEvent.keyDown(input, ctrlC);
       // Event should not be prevented
 
       // Ctrl+V should be allowed
-      const ctrlV = new KeyboardEvent('keydown', { key: 'v', keyCode: 86, ctrlKey: true });
+      const ctrlV = new KeyboardEvent('keydown', { key: 'v', ctrlKey: true });
       fireEvent.keyDown(input, ctrlV);
       // Event should not be prevented
     });

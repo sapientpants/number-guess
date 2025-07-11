@@ -34,10 +34,20 @@ export const GameHistory = () => {
     return minutes > 0 ? `${minutes}m ${seconds % 60}s` : `${seconds}s`;
   };
 
+  const getPerformanceColorClass = (guessCount: number, player: typeof currentPlayer) => {
+    if (guessCount <= player.bestGame) {
+      return 'text-green-400';
+    }
+    if (guessCount <= player.averageGuesses) {
+      return 'text-yellow-400';
+    }
+    return 'text-gray-300';
+  };
+
   return (
     <Card>
       <h3 className="text-lg font-semibold mb-4">
-        Game History
+        Game History{' '}
         <span className="text-sm text-gray-400 ml-2">
           ({playerGames.length} {playerGames.length === 1 ? 'game' : 'games'})
         </span>
@@ -61,13 +71,7 @@ export const GameHistory = () => {
               </div>
               <div className="text-right">
                 <p
-                  className={`font-bold ${
-                    game.guesses.length <= currentPlayer.bestGame
-                      ? 'text-green-400'
-                      : game.guesses.length <= currentPlayer.averageGuesses
-                        ? 'text-yellow-400'
-                        : 'text-gray-300'
-                  }`}
+                  className={`font-bold ${getPerformanceColorClass(game.guesses.length, currentPlayer)}`}
                 >
                   {game.guesses.length} {game.guesses.length === 1 ? 'guess' : 'guesses'}
                 </p>

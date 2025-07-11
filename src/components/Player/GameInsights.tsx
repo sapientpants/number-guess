@@ -3,10 +3,37 @@ import { usePlayerStore } from '../../store/playerStore';
 import { useGameStore } from '../../store/gameStore';
 import { Card } from '../UI/Card';
 import { getTemperatureEmoji } from '../../utils/gameLogic';
+import { Game } from '../../types';
 
 export const GameInsights = () => {
   const { currentPlayer } = usePlayerStore();
   const { loadGameHistory, currentGame, guesses } = useGameStore();
+
+  const getPerformanceBackgroundClass = (guessCount: number, player: typeof currentPlayer) => {
+    if (!player) return 'bg-gray-800/30';
+    if (guessCount <= player.bestGame) return 'bg-green-900/20';
+    if (guessCount <= player.averageGuesses) return 'bg-yellow-900/20';
+    return 'bg-gray-800/30';
+  };
+
+  const calculateStreaks = (games: Game[], avgGuesses: number) => {
+    let currentStreak = 0;
+    let bestStreak = 0;
+    let tempStreak = 0;
+
+    for (const game of games) {
+      if (game.guesses.length <= avgGuesses) {
+        tempStreak++;
+        bestStreak = Math.max(bestStreak, tempStreak);
+      } else {
+        if (currentStreak === 0) currentStreak = tempStreak;
+        tempStreak = 0;
+      }
+    }
+    if (currentStreak === 0) currentStreak = tempStreak;
+
+    return { currentStreak, bestStreak };
+  };
 
   if (!currentPlayer) return null;
 
@@ -31,20 +58,7 @@ export const GameInsights = () => {
       : null;
 
   // Calculate streaks
-  let currentStreak = 0;
-  let bestStreak = 0;
-  let tempStreak = 0;
-
-  for (const game of playerGames) {
-    if (game.guesses.length <= currentPlayer.averageGuesses) {
-      tempStreak++;
-      if (tempStreak > bestStreak) bestStreak = tempStreak;
-    } else {
-      if (currentStreak === 0) currentStreak = tempStreak;
-      tempStreak = 0;
-    }
-  }
-  if (currentStreak === 0) currentStreak = tempStreak;
+  const { currentStreak, bestStreak } = calculateStreaks(playerGames, currentPlayer.averageGuesses);
 
   return (
     <div className="space-y-4">
@@ -153,13 +167,7 @@ export const GameInsights = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className={`flex-1 text-center p-2 rounded ${
-                  game.guesses.length <= currentPlayer.bestGame
-                    ? 'bg-green-900/20'
-                    : game.guesses.length <= currentPlayer.averageGuesses
-                      ? 'bg-yellow-900/20'
-                      : 'bg-gray-800/30'
-                }`}
+                className={`flex-1 text-center p-2 rounded ${getPerformanceBackgroundClass(game.guesses.length, currentPlayer)}`}
               >
                 <p className="text-lg font-bold">{game.guesses.length}</p>
               </motion.div>
