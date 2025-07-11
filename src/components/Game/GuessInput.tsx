@@ -16,6 +16,7 @@ export const GuessInput = () => {
     register,
     handleSubmit,
     reset,
+    setError,
     formState: { errors },
   } = useForm<GuessFormData>();
 
@@ -29,7 +30,12 @@ export const GuessInput = () => {
   const onSubmit = async (data: GuessFormData) => {
     const guessNumber = parseInt(data.guess);
 
+    // Don't submit if it's a duplicate guess - show validation error
     if (guesses.includes(guessNumber)) {
+      setError('guess', {
+        type: 'manual',
+        message: 'You already guessed this number',
+      });
       return;
     }
 
@@ -71,7 +77,6 @@ export const GuessInput = () => {
             validate: (value) => {
               const num = parseInt(value);
               if (isNaN(num)) return 'Please enter a valid number';
-              if (guesses.includes(num)) return 'You already guessed this number';
               return true;
             },
           })}
