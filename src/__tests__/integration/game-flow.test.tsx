@@ -68,7 +68,7 @@ describe('Game Flow Integration Tests', () => {
 
         // Type the guess and click submit
         await userEvent.type(guessInput, '25');
-        
+
         // Click the submit button directly
         const submitButton = screen.getByRole('button', { name: 'Make Guess' });
         await userEvent.click(submitButton);
@@ -122,11 +122,14 @@ describe('Game Flow Integration Tests', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Create Player' }));
 
       // Wait for game board to render with more flexible timing
-      await waitFor(() => {
-        const readyText = screen.queryByText('Ready to Play?');
-        const startButton = screen.queryByRole('button', { name: 'Start New Game' });
-        expect(readyText || startButton).toBeTruthy();
-      }, { timeout: 5000 });
+      await waitFor(
+        () => {
+          const readyText = screen.queryByText('Ready to Play?');
+          const startButton = screen.queryByRole('button', { name: 'Start New Game' });
+          expect(readyText || startButton).toBeTruthy();
+        },
+        { timeout: 5000 }
+      );
 
       // Click start new game
       const startButton = screen.getByRole('button', { name: 'Start New Game' });
