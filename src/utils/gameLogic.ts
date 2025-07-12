@@ -3,6 +3,10 @@ import { GuessResult } from '../types';
 type Distance = 'hot' | 'warm' | 'cold';
 
 export const generateRandomNumber = (min: number = 1, max: number = 100): number => {
+  // Using Math.random() is safe here as this is a game application
+  // where cryptographic randomness is not required. The predictability
+  // of Math.random() does not pose a security risk in this context.
+  // NOSONAR: This is intentional for a simple number guessing game
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
