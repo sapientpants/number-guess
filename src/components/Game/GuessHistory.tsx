@@ -5,6 +5,12 @@ import { getColorForDistance, getTemperatureEmoji } from '../../utils/gameLogic'
 export const GuessHistory = () => {
   const { guessResults } = useGameStore();
 
+  const getFeedbackText = (feedback: string) => {
+    if (feedback === 'too-high') return '↓ Too High';
+    if (feedback === 'too-low') return '↑ Too Low';
+    return '🎯 Correct!';
+  };
+
   if (guessResults.length === 0) {
     return (
       <div className="text-center text-gray-400 py-8">
@@ -43,11 +49,7 @@ export const GuessHistory = () => {
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-medium text-white">
-                    {result.feedback === 'too-high'
-                      ? '↓ Too High'
-                      : result.feedback === 'too-low'
-                        ? '↑ Too Low'
-                        : '🎯 Correct!'}
+                    {getFeedbackText(result.feedback)}
                   </p>
                   <p className="text-xs text-gray-300 capitalize">
                     {result.feedback === 'correct' ? 'Perfect!' : result.distance}

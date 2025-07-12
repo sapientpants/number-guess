@@ -7,6 +7,13 @@ export const PlayerStats = () => {
   const { currentPlayer, players } = usePlayerStore();
   const { loadGameHistory } = useGameStore();
 
+  const getPerformanceTextClass = (guessCount: number, player: typeof currentPlayer) => {
+    if (!player) return 'text-gray-400';
+    if (guessCount <= player.bestGame) return 'text-green-400';
+    if (guessCount <= player.averageGuesses) return 'text-yellow-400';
+    return 'text-gray-400';
+  };
+
   if (!currentPlayer) return null;
 
   // Get this player's game history
@@ -77,13 +84,7 @@ export const PlayerStats = () => {
                   {new Date(game.completedAt!).toLocaleDateString()}
                 </span>
                 <span
-                  className={`font-semibold ${
-                    game.guesses.length <= currentPlayer.bestGame
-                      ? 'text-green-400'
-                      : game.guesses.length <= currentPlayer.averageGuesses
-                        ? 'text-yellow-400'
-                        : 'text-gray-400'
-                  }`}
+                  className={`font-semibold ${getPerformanceTextClass(game.guesses.length, currentPlayer)}`}
                 >
                   {game.guesses.length} guesses
                 </span>

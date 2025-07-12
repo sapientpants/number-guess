@@ -1,6 +1,6 @@
 /* Tailwind CSS is automatically injected by @tailwindcss/vite plugin */
 
-@theme {
+:root {
   --color-purple-500: #8B5CF6;
   --color-purple-600: #7C3AED;
   --color-pink-500: #EC4899;

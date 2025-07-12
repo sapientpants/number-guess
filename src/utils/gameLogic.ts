@@ -1,5 +1,7 @@
 import { GuessResult } from '../types';
 
+type Distance = 'hot' | 'warm' | 'cold';
+
 export const generateRandomNumber = (min: number = 1, max: number = 100): number => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
@@ -16,7 +18,7 @@ export const checkGuess = (guess: number, target: number): GuessResult => {
     feedback = 'too-low';
   }
 
-  let distance: 'hot' | 'warm' | 'cold';
+  let distance: Distance;
   if (difference === 0) {
     distance = 'hot';
   } else if (difference <= 5) {
@@ -35,10 +37,7 @@ export const checkGuess = (guess: number, target: number): GuessResult => {
   };
 };
 
-export const getColorForDistance = (
-  distance: 'hot' | 'warm' | 'cold',
-  difference?: number
-): string => {
+export const getColorForDistance = (distance: Distance, difference?: number): string => {
   // More nuanced color gradients based on exact difference with better contrast
   if (difference !== undefined) {
     if (difference === 0) {
@@ -72,10 +71,7 @@ export const getColorForDistance = (
 };
 
 // New function to get temperature emoji
-export const getTemperatureEmoji = (
-  distance: 'hot' | 'warm' | 'cold',
-  difference?: number
-): string => {
+export const getTemperatureEmoji = (distance: Distance, difference?: number): string => {
   if (difference !== undefined) {
     if (difference === 0) return '🎯';
     if (difference <= 2) return '🔥';
@@ -100,7 +96,7 @@ export const getTemperatureEmoji = (
 
 export const getMessageForFeedback = (
   feedback: 'too-high' | 'too-low' | 'correct',
-  distance: 'hot' | 'warm' | 'cold'
+  distance: Distance
 ): string => {
   if (feedback === 'correct') {
     return '🎉 Congratulations! You guessed it!';

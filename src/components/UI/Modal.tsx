@@ -41,9 +41,9 @@ export const Modal = ({ isOpen, onClose, title, children, actions }: ModalProps)
 
               {actions && (
                 <div className="flex gap-3 justify-end">
-                  {actions.map((action, index) => (
+                  {actions.map((action) => (
                     <Button
-                      key={index}
+                      key={action.label}
                       onClick={action.onClick}
                       variant={action.variant || 'secondary'}
                       size="sm"
