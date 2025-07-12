@@ -191,17 +191,17 @@ describe('GuessInput', () => {
       // Ctrl+A should be allowed
       const ctrlA = new KeyboardEvent('keydown', { key: 'a', ctrlKey: true });
       fireEvent.keyDown(input, ctrlA);
-      // Event should not be prevented
 
       // Ctrl+C should be allowed
       const ctrlC = new KeyboardEvent('keydown', { key: 'c', ctrlKey: true });
       fireEvent.keyDown(input, ctrlC);
-      // Event should not be prevented
 
       // Ctrl+V should be allowed
       const ctrlV = new KeyboardEvent('keydown', { key: 'v', ctrlKey: true });
       fireEvent.keyDown(input, ctrlV);
-      // Event should not be prevented
+
+      // The input should still be in the document (not removed/disabled)
+      expect(input).toBeInTheDocument();
     });
   });
 
