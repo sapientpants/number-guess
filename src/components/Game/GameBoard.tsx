@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '../UI/Card';
 import { Button } from '../UI/Button';
-import { Modal } from '../UI/Modal';
 import { GuessInput } from './GuessInput';
 import { GuessHistory } from './GuessHistory';
 import { GameStats } from './GameStats';
@@ -17,7 +16,6 @@ export const GameBoard = () => {
 
   const { currentPlayer, updatePlayerStats } = usePlayerStore();
   const [activeTab, setActiveTab] = useState<RightPanelTab>('history');
-  const [showGiveUpModal, setShowGiveUpModal] = useState(false);
 
   // Update player stats when game is won
   useEffect(() => {
@@ -80,28 +78,8 @@ export const GameBoard = () => {
 
         <GameStats />
 
-        <div className="mt-8 space-y-4">
+        <div className="mt-8">
           <GuessInput />
-
-          {/* Game Control Buttons - only show during active play */}
-          {gameStatus === 'playing' && guesses.length > 0 && (
-            <div className="flex gap-3 justify-center">
-              <Button onClick={() => setShowGiveUpModal(true)} variant="secondary" size="sm">
-                Give Up
-              </Button>
-              <Button
-                onClick={() => {
-                  if (window.confirm('Are you sure you want to start a new game?')) {
-                    handleNewGame();
-                  }
-                }}
-                variant="secondary"
-                size="sm"
-              >
-                New Game
-              </Button>
-            </div>
-          )}
         </div>
 
         <AnimatePresence>
@@ -197,35 +175,6 @@ export const GameBoard = () => {
           </AnimatePresence>
         </div>
       </div>
-
-      {/* Give Up Modal */}
-      <Modal
-        isOpen={showGiveUpModal}
-        onClose={() => setShowGiveUpModal(false)}
-        title="Give Up?"
-        actions={[
-          {
-            label: 'Cancel',
-            onClick: () => setShowGiveUpModal(false),
-            variant: 'secondary',
-          },
-          {
-            label: 'Give Up',
-            onClick: () => {
-              setShowGiveUpModal(false);
-              resetGame();
-            },
-            variant: 'primary',
-          },
-        ]}
-      >
-        <p className="mb-4">Are you sure you want to give up?</p>
-        {currentGame && (
-          <p className="text-lg font-semibold text-purple-400">
-            The number was: {currentGame.targetNumber}
-          </p>
-        )}
-      </Modal>
     </div>
   );
 };
