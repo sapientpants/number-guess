@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '../UI/Card';
 import { Button } from '../UI/Button';
 import { usePlayerStore } from '../../store/playerStore';
+import { useGameStore } from '../../store/gameStore';
 import { PlayerProfile } from './PlayerProfile';
 
 interface PlayerFormData {
@@ -16,6 +17,7 @@ interface PlayerLoginProps {
 
 export const PlayerLogin = ({ onPlayerSelected }: PlayerLoginProps = {}) => {
   const { players, createPlayer, selectPlayer, currentPlayer } = usePlayerStore();
+  const { currentGame, resetGame } = useGameStore();
   const [isCreating, setIsCreating] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
 
@@ -34,6 +36,13 @@ export const PlayerLogin = ({ onPlayerSelected }: PlayerLoginProps = {}) => {
   };
 
   const handleSelectPlayer = (playerId: string) => {
+    // Check if we're switching to a different player
+    // Since currentPlayer might be null when switching, check the game's playerId
+    if (currentGame && currentGame.playerId !== playerId) {
+      // Reset the game state if switching to a different player
+      resetGame();
+    }
+
     selectPlayer(playerId);
     onPlayerSelected?.();
   };
