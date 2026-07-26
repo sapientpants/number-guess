@@ -107,7 +107,7 @@ export const getMessageForFeedback = (
   }
 
   const direction = feedback === 'too-high' ? 'lower' : 'higher';
-  let temperatureHint = '';
+  let temperatureHint: string;
 
   if (distance === 'hot') {
     temperatureHint = "... You're very close!";
