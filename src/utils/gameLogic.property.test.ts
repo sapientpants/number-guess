@@ -52,7 +52,7 @@ describe('gameLogic properties', () => {
   });
 
   test.prop([distanceArb, fc.option(fc.integer({ min: 0, max: 99 }), { nil: undefined })])(
-    'colour and emoji are defined for every distance/difference',
+    'color and emoji are defined for every distance/difference',
     (distance, difference) => {
       expect(getColorForDistance(distance, difference)).toMatch(/^from-\S+ to-\S+$/);
       expect(getTemperatureEmoji(distance, difference)).not.toBe('');

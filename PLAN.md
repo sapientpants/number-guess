@@ -6,17 +6,17 @@
 is a "batteries-included" Next.js + TypeScript template. Its value is not Next.js itself but
 the **quality and delivery tooling** wrapped around the code:
 
-| Area             | Starter                                                                                                 | number-guess today                                                       |
-| ---------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| TypeScript       | `strict` + `noUncheckedIndexedAccess` + `exactOptionalPropertyTypes` + `noImplicitOverride`, ES2022     | `strict` + `noUncheckedIndexedAccess`, ES2020                            |
-| ESLint           | Type-aware (`recommended-type-checked`), sonarjs, unicorn, security, complexity limits, JSON linting   | Non-type-aware `recommended`, hand-written globals, `eslint-plugin-prettier` |
-| Tests            | Vitest, 90% coverage thresholds, property-based tests (fast-check), mutation testing (Stryker)         | Vitest, ~81% coverage, **no thresholds**, 1 skipped test                 |
-| Code quality     | knip (dead code), jscpd (duplication), madge (cycles), cspell, markdownlint, size-limit                | none                                                                     |
-| Git hooks        | commitlint (`commit-msg`), branch-name validation, full gate on `pre-commit`                            | full gate on `pre-commit` only                                           |
-| CI               | Parallel validate / quality / security jobs, OSV scanner, CodeQL, actionlint, weekly mutation run       | Single job running `pnpm ci`, over-broad `contents: write` permission    |
-| Toolchain pinning| `engines`, `mise.toml`, `.npmrc engine-strict`                                                          | `packageManager` only; CLAUDE.md documents a stale pnpm version          |
-| Docs             | README, CONTRIBUTING, SECURITY, ADRs, PR/issue templates, VS Code recommendations                       | No README; ad-hoc `implementation.md` / `TEST_SUMMARY.md` at the root    |
-| Input validation | "Validate all inputs at trust boundaries"                                                               | `localStorage` JSON is cast with `as Player[]` and trusted blindly       |
+| Area              | Starter                                                                                              | number-guess today                                                           |
+| ----------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| TypeScript        | `strict` + `noUncheckedIndexedAccess` + `exactOptionalPropertyTypes` + `noImplicitOverride`, ES2022  | `strict` + `noUncheckedIndexedAccess`, ES2020                                |
+| ESLint            | Type-aware (`recommended-type-checked`), sonarjs, unicorn, security, complexity limits, JSON linting | Non-type-aware `recommended`, hand-written globals, `eslint-plugin-prettier` |
+| Tests             | Vitest, 90% coverage thresholds, property-based tests (fast-check), mutation testing (Stryker)       | Vitest, ~81% coverage, **no thresholds**, 1 skipped test                     |
+| Code quality      | knip (dead code), jscpd (duplication), madge (cycles), cspell, markdownlint, size-limit              | none                                                                         |
+| Git hooks         | commitlint (`commit-msg`), branch-name validation, full gate on `pre-commit`                         | full gate on `pre-commit` only                                               |
+| CI                | Parallel validate / quality / security jobs, OSV scanner, CodeQL, actionlint, weekly mutation run    | Single job running `pnpm ci`, over-broad `contents: write` permission        |
+| Toolchain pinning | `engines`, `mise.toml`, `.npmrc engine-strict`                                                       | `packageManager` only; CLAUDE.md documents a stale pnpm version              |
+| Docs              | README, CONTRIBUTING, SECURITY, ADRs, PR/issue templates, VS Code recommendations                    | No README; ad-hoc `implementation.md` / `TEST_SUMMARY.md` at the root        |
+| Input validation  | "Validate all inputs at trust boundaries"                                                            | `localStorage` JSON is cast with `as Player[]` and trusted blindly           |
 
 This plan ports the parts that fit a client-only Vite SPA and explicitly skips the rest.
 
@@ -80,7 +80,7 @@ mode). Today a malformed record is cast straight to `Player` and can crash rende
 2. Tests for `Modal`, `PlayerLogin`, `PlayerHeader`, `LeaderboardEntry`, `leaderboardStore`, and
    the uncovered branches of `gameLogic.ts`.
 3. Investigate and fix or remove the skipped integration test.
-4. Property-based tests with `fast-check` for `gameLogic` (feedback/distance invariants, colour and
+4. Property-based tests with `fast-check` for `gameLogic` (feedback/distance invariants, color and
    emoji total functions) and `calculateLeaderboard` (sorted, ≤10 entries, contiguous ranks,
    only players with games).
 5. Enforce coverage thresholds in `vitest.config.ts` at **90%** for lines/statements/functions/
@@ -91,14 +91,14 @@ mode). Today a malformed record is cast straight to `Player` and can crash rende
 
 Add as scripts and wire into the `ci` gate:
 
-| Script                 | Tool              | Purpose                                         |
-| ---------------------- | ----------------- | ----------------------------------------------- |
-| `pnpm dead-code`       | knip              | unused files, exports, and dependencies         |
-| `pnpm duplication`     | jscpd             | copy-paste detection                            |
-| `pnpm deps:circular`   | madge             | circular imports                                |
-| `pnpm lint:spelling`   | cspell            | typos in code and docs                          |
-| `pnpm lint:markdown`   | markdownlint-cli2 | consistent Markdown                             |
-| `pnpm size`            | size-limit        | bundle-size budget for `dist/assets/*.js`/`.css` |
+| Script               | Tool              | Purpose                                          |
+| -------------------- | ----------------- | ------------------------------------------------ |
+| `pnpm dead-code`     | knip              | unused files, exports, and dependencies          |
+| `pnpm duplication`   | jscpd             | copy-paste detection                             |
+| `pnpm deps:circular` | madge             | circular imports                                 |
+| `pnpm lint:spelling` | cspell            | typos in code and docs                           |
+| `pnpm lint:markdown` | markdownlint-cli2 | consistent Markdown                              |
+| `pnpm size`          | size-limit        | bundle-size budget for `dist/assets/*.js`/`.css` |
 
 Also format all files (not just `src/**/*.{ts,tsx}`) with Prettier, matching the starter.
 

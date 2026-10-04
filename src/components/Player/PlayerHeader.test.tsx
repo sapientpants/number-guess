@@ -31,7 +31,7 @@ describe('PlayerHeader', () => {
     expect(screen.getByText('Select Player')).toBeInTheDocument();
   });
 
-  it("summarises the current player's stats", () => {
+  it("summarizes the current player's stats", () => {
     render(<PlayerHeader />);
 
     expect(screen.getByText('A')).toBeInTheDocument(); // avatar initial

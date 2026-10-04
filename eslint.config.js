@@ -7,6 +7,7 @@ import jsxA11y from 'eslint-plugin-jsx-a11y';
 import sonarjs from 'eslint-plugin-sonarjs';
 import unicorn from 'eslint-plugin-unicorn';
 import jsonc from 'eslint-plugin-jsonc';
+import markdown from '@eslint/markdown';
 import eslintConfigPrettier from 'eslint-config-prettier';
 
 export default tseslint.config(
@@ -128,6 +129,13 @@ export default tseslint.config(
     },
   },
 
+  // Markdown
+  {
+    files: ['**/*.md'],
+    extends: [markdown.configs.recommended],
+    language: 'markdown/gfm',
+  },
+
   // Keep Prettier last to disable stylistic rules that conflict with it
-  eslintConfigPrettier,
+  eslintConfigPrettier
 );

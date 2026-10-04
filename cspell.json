@@ -1,0 +1,17 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": ["autocannon", "esbuild", "opencode", "sapientpants", "Tremblay", "vite"],
+  "ignorePaths": [
+    "node_modules/**",
+    "dist/**",
+    "coverage/**",
+    "reports/**",
+    ".stryker-tmp/**",
+    "pnpm-lock.yaml",
+    "*.tsbuildinfo",
+    "public/**",
+    "*.png",
+    "*.svg"
+  ]
+}

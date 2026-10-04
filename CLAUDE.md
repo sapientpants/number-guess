@@ -42,7 +42,7 @@ Stat updates are split between a store action and a component effect:
 - **Games played** is incremented in `gameStore.startNewGame` (in the store).
 - **Win stats** (`gamesWon`, `totalGuesses`, `bestGame`, `averageGuesses`) are written by a `useEffect` in `src/components/Game/GameBoard.tsx` that fires when `gameStatus` becomes `'won'` and calls `playerStore.updatePlayerStats`.
 
-Consequence: `averageGuesses = totalGuesses / gamesWon` — averaged over **won games only**, not games played. `incrementGamesPlayed` deliberately does *not* recompute the average. Keep this invariant if you touch stat logic.
+Consequence: `averageGuesses = totalGuesses / gamesWon` — averaged over **won games only**, not games played. `incrementGamesPlayed` deliberately does _not_ recompute the average. Keep this invariant if you touch stat logic.
 
 ### Persistence
 

@@ -126,7 +126,7 @@ describe('game persistence', () => {
     expect(loadGames()).toEqual([valid]);
   });
 
-  it('ignores an unparseable completedAt rather than dropping the game', () => {
+  it('ignores an invalid completedAt rather than dropping the game', () => {
     const { completedAt: _unused, ...rest } = makeGame();
     expect(parseGame({ ...rest, completedAt: 'garbage' })).toEqual(rest);
   });
