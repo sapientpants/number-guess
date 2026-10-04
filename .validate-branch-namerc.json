@@ -1,0 +1,4 @@
+{
+  "pattern": "^(main|(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)/[a-z0-9._-]+)$",
+  "errorMsg": "Branch names must look like <type>/<short-description>, e.g. feat/sound-effects or fix/leaderboard-ties.\nValid types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert."
+}
