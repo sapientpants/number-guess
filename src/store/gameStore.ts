@@ -65,7 +65,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       ...currentGame,
       guesses: newGuesses,
       isComplete: isWon,
-      completedAt: isWon ? new Date() : undefined,
+      ...(isWon && { completedAt: new Date() }),
     };
 
     // Save to localStorage

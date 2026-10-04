@@ -50,7 +50,7 @@ export const loadGames = (): Game[] => {
     return games.map((game) => ({
       ...game,
       startedAt: new Date(game.startedAt),
-      completedAt: game.completedAt ? new Date(game.completedAt) : undefined,
+      ...(game.completedAt && { completedAt: new Date(game.completedAt) }),
     }));
   } catch {
     return [];
