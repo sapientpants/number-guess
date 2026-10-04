@@ -44,7 +44,7 @@ export const PlayerHeader = () => {
                 // If we have players, select the first one
                 const players = usePlayerStore.getState().players;
                 if (players.length > 0 && !currentPlayer) {
-                  selectPlayer(players[0]?.id || '');
+                  selectPlayer(players[0]?.id ?? '');
                 }
               }}
               className="px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700/50 rounded-md transition-all"

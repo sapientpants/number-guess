@@ -237,7 +237,7 @@ describe('gameStore', () => {
 
       const state = useGameStore.getState();
       expect(state.guesses).toEqual([25, 30]); // No change
-      expect(vi.mocked(gameLogic.checkGuess).mock.calls.length).toBe(callCount);
+      expect(vi.mocked(gameLogic.checkGuess).mock.calls).toHaveLength(callCount);
     });
 
     it('should add guess and result for valid guess', () => {
@@ -330,7 +330,7 @@ describe('gameStore', () => {
 
       const state = useGameStore.getState();
       expect(state.guesses).toEqual([50]); // No new guess added
-      expect(vi.mocked(gameLogic.checkGuess).mock.calls.length).toBe(callCount);
+      expect(vi.mocked(gameLogic.checkGuess).mock.calls).toHaveLength(callCount);
     });
   });
 });

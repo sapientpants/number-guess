@@ -8,6 +8,7 @@ vi.mock('../utils/storage', () => ({
   savePlayers: vi.fn(),
   loadPlayers: vi.fn(() => []),
   saveCurrentPlayerId: vi.fn(),
+  clearCurrentPlayerId: vi.fn(),
   loadCurrentPlayerId: vi.fn(() => null),
   saveGames: vi.fn(),
   loadGames: vi.fn(() => []),

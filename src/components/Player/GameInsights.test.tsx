@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { GameInsights } from './GameInsights';
 import { usePlayerStore } from '../../store/playerStore';
 import { useGameStore } from '../../store/gameStore';
-import { Game, Player } from '../../types';
+import type { Game, Player } from '../../types';
 
 vi.mock('../../store/playerStore');
 vi.mock('../../store/gameStore');

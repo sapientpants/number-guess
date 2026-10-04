@@ -191,7 +191,7 @@ describe('playerStore', () => {
 
       store.selectPlayer('');
       expect(usePlayerStore.getState().currentPlayer).toBeNull();
-      expect(storage.saveCurrentPlayerId).toHaveBeenCalledWith('');
+      expect(storage.clearCurrentPlayerId).toHaveBeenCalled();
     });
 
     it('should not change current player for invalid ID', () => {

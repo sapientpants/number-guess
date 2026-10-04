@@ -28,7 +28,7 @@ describe('GuessInput', () => {
   describe('input validation', () => {
     it('should only allow integer digits', async () => {
       render(<GuessInput />);
-      const input = screen.getByPlaceholderText('Enter your guess (1-100)') as HTMLInputElement;
+      const input = screen.getByPlaceholderText<HTMLInputElement>('Enter your guess (1-100)');
 
       // Number inputs with type="number" already prevent alphabetic characters
       await userEvent.type(input, 'abc');
@@ -42,7 +42,7 @@ describe('GuessInput', () => {
 
     it('should prevent non-numeric keypress events', () => {
       render(<GuessInput />);
-      const input = screen.getByPlaceholderText('Enter your guess (1-100)') as HTMLInputElement;
+      const input = screen.getByPlaceholderText<HTMLInputElement>('Enter your guess (1-100)');
 
       // Letter keys should be prevented
       const letterEvent = new KeyboardEvent('keydown', { key: 'a' });
@@ -56,7 +56,7 @@ describe('GuessInput', () => {
 
     it('should show error for numbers outside range', async () => {
       render(<GuessInput />);
-      const input = screen.getByPlaceholderText('Enter your guess (1-100)') as HTMLInputElement;
+      const input = screen.getByPlaceholderText<HTMLInputElement>('Enter your guess (1-100)');
       const form = screen.getByRole('form', { name: 'Number guess form' });
 
       fireEvent.change(input, { target: { value: '101' } });
@@ -72,7 +72,7 @@ describe('GuessInput', () => {
 
     it('should show error for zero', async () => {
       render(<GuessInput />);
-      const input = screen.getByPlaceholderText('Enter your guess (1-100)') as HTMLInputElement;
+      const input = screen.getByPlaceholderText<HTMLInputElement>('Enter your guess (1-100)');
       const form = screen.getByRole('form', { name: 'Number guess form' });
 
       fireEvent.change(input, { target: { value: '0' } });
@@ -88,7 +88,7 @@ describe('GuessInput', () => {
 
     it('should show error for negative numbers', async () => {
       render(<GuessInput />);
-      const input = screen.getByPlaceholderText('Enter your guess (1-100)') as HTMLInputElement;
+      const input = screen.getByPlaceholderText<HTMLInputElement>('Enter your guess (1-100)');
       const form = screen.getByRole('form', { name: 'Number guess form' });
 
       // Note: HTML number input may not accept negative values depending on browser
@@ -115,7 +115,7 @@ describe('GuessInput', () => {
       });
 
       render(<GuessInput />);
-      const input = screen.getByPlaceholderText('Enter your guess (1-100)') as HTMLInputElement;
+      const input = screen.getByPlaceholderText<HTMLInputElement>('Enter your guess (1-100)');
       const form = screen.getByRole('form', { name: 'Number guess form' });
 
       // Use fireEvent to set the value
@@ -146,7 +146,7 @@ describe('GuessInput', () => {
   describe('keyboard interactions', () => {
     it('should submit form on Enter key', async () => {
       render(<GuessInput />);
-      const input = screen.getByPlaceholderText('Enter your guess (1-100)') as HTMLInputElement;
+      const input = screen.getByPlaceholderText<HTMLInputElement>('Enter your guess (1-100)');
       const form = screen.getByRole('form', { name: 'Number guess form' });
 
       // Use fireEvent to set the value directly
@@ -165,7 +165,7 @@ describe('GuessInput', () => {
       });
     });
 
-    it('should not submit on Enter when disabled', async () => {
+    it('should not submit on Enter when disabled', () => {
       vi.mocked(useGameStore).mockReturnValue({
         currentGame: null,
         targetNumber: 0,
@@ -186,7 +186,7 @@ describe('GuessInput', () => {
 
     it('should allow keyboard shortcuts for copy/paste', () => {
       render(<GuessInput />);
-      const input = screen.getByPlaceholderText('Enter your guess (1-100)') as HTMLInputElement;
+      const input = screen.getByPlaceholderText<HTMLInputElement>('Enter your guess (1-100)');
 
       // Ctrl+A should be allowed
       const ctrlA = new KeyboardEvent('keydown', { key: 'a', ctrlKey: true });
@@ -208,7 +208,7 @@ describe('GuessInput', () => {
   describe('form behavior', () => {
     it('should clear input after successful submission', async () => {
       render(<GuessInput />);
-      const input = screen.getByPlaceholderText('Enter your guess (1-100)') as HTMLInputElement;
+      const input = screen.getByPlaceholderText<HTMLInputElement>('Enter your guess (1-100)');
 
       await userEvent.type(input, '42');
       await userEvent.keyboard('{Enter}');
@@ -220,14 +220,14 @@ describe('GuessInput', () => {
 
     it('should auto-focus input on mount', () => {
       render(<GuessInput />);
-      const input = screen.getByPlaceholderText('Enter your guess (1-100)') as HTMLInputElement;
+      const input = screen.getByPlaceholderText<HTMLInputElement>('Enter your guess (1-100)');
 
       expect(document.activeElement).toBe(input);
     });
 
     it('should refocus input after submission', async () => {
       render(<GuessInput />);
-      const input = screen.getByPlaceholderText('Enter your guess (1-100)') as HTMLInputElement;
+      const input = screen.getByPlaceholderText<HTMLInputElement>('Enter your guess (1-100)');
 
       await userEvent.type(input, '42');
       await userEvent.keyboard('{Enter}');
@@ -254,7 +254,7 @@ describe('GuessInput', () => {
       });
 
       render(<GuessInput />);
-      const input = screen.getByPlaceholderText('Enter your guess (1-100)') as HTMLInputElement;
+      const input = screen.getByPlaceholderText<HTMLInputElement>('Enter your guess (1-100)');
       const button = screen.getByText('Make Guess');
 
       expect(input).toBeDisabled();
@@ -265,7 +265,7 @@ describe('GuessInput', () => {
   describe('input filtering', () => {
     it('should strip non-digit characters on input event', () => {
       render(<GuessInput />);
-      const input = screen.getByPlaceholderText('Enter your guess (1-100)') as HTMLInputElement;
+      const input = screen.getByPlaceholderText<HTMLInputElement>('Enter your guess (1-100)');
 
       // The onInput handler strips non-digits, but we need to simulate this properly
       // Set value and trigger input event
@@ -279,9 +279,9 @@ describe('GuessInput', () => {
       expect(input.value).toBe('123');
     });
 
-    it('should handle paste events with non-numeric content', async () => {
+    it('should handle paste events with non-numeric content', () => {
       render(<GuessInput />);
-      const input = screen.getByPlaceholderText('Enter your guess (1-100)') as HTMLInputElement;
+      const input = screen.getByPlaceholderText<HTMLInputElement>('Enter your guess (1-100)');
 
       // Simulate pasting by setting value and triggering input
       input.value = 'abc123def';
@@ -340,7 +340,7 @@ describe('GuessInput', () => {
   describe('accessibility', () => {
     it('should have proper ARIA attributes', () => {
       render(<GuessInput />);
-      const input = screen.getByPlaceholderText('Enter your guess (1-100)') as HTMLInputElement;
+      const input = screen.getByPlaceholderText<HTMLInputElement>('Enter your guess (1-100)');
       const form = screen.getByRole('form', { name: 'Number guess form' });
 
       expect(form).toBeInTheDocument();
@@ -349,7 +349,7 @@ describe('GuessInput', () => {
 
     it('should update ARIA attributes on error', async () => {
       render(<GuessInput />);
-      const input = screen.getByPlaceholderText('Enter your guess (1-100)') as HTMLInputElement;
+      const input = screen.getByPlaceholderText<HTMLInputElement>('Enter your guess (1-100)');
       const submitButton = screen.getByText('Make Guess');
 
       await userEvent.type(input, '101');

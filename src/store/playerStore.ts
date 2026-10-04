@@ -1,9 +1,10 @@
 import { create } from 'zustand';
-import { Player } from '../types';
+import type { Player } from '../types';
 import {
   savePlayers,
   loadPlayers,
   saveCurrentPlayerId,
+  clearCurrentPlayerId,
   loadCurrentPlayerId,
 } from '../utils/storage';
 
@@ -28,7 +29,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     const players = loadPlayers();
     const currentPlayerId = loadCurrentPlayerId();
     const currentPlayer = currentPlayerId
-      ? players.find((p) => p.id === currentPlayerId) || null
+      ? (players.find((p) => p.id === currentPlayerId) ?? null)
       : null;
 
     set({ players, currentPlayer });
@@ -56,8 +57,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
   selectPlayer: (playerId) => {
     if (!playerId) {
-      // Clear selection
-      saveCurrentPlayerId('');
+      clearCurrentPlayerId();
       set({ currentPlayer: null });
       return;
     }
@@ -72,7 +72,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   updatePlayerStats: (playerId, guessCount) => {
     const players = get().players.map((player) => {
       if (player.id === playerId) {
-        const gamesWon = (player.gamesWon || 0) + 1;
+        const gamesWon = player.gamesWon + 1;
         const totalGuesses = player.totalGuesses + guessCount;
         const bestGame = player.bestGame === 0 ? guessCount : Math.min(player.bestGame, guessCount);
         const averageGuesses = totalGuesses / gamesWon;
@@ -91,7 +91,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
     savePlayers(players);
 
-    const currentPlayer = players.find((p) => p.id === playerId) || null;
+    const currentPlayer = players.find((p) => p.id === playerId) ?? null;
     set({ players, currentPlayer });
   },
 
@@ -112,7 +112,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
     savePlayers(players);
 
-    const currentPlayer = players.find((p) => p.id === playerId) || null;
+    const currentPlayer = players.find((p) => p.id === playerId) ?? null;
     set({ players, currentPlayer });
   },
 

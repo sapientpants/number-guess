@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LeaderboardEntry as LeaderboardEntryType } from '../../types';
+import type { LeaderboardEntry as LeaderboardEntryType } from '../../types';
 
 interface LeaderboardEntryProps {
   entry: LeaderboardEntryType;

@@ -1,120 +1,88 @@
-import { GuessResult } from '../types';
+import type { GuessResult } from '../types';
 
-type Distance = 'hot' | 'warm' | 'cold';
+type Distance = GuessResult['distance'];
+type Feedback = GuessResult['feedback'];
 
-export const generateRandomNumber = (min: number = 1, max: number = 100): number => {
+interface FeedbackStyle {
+  color: string;
+  emoji: string;
+}
+
+/** Fine-grained styling by exact distance from the target, checked in ascending order. */
+const DIFFERENCE_BANDS: readonly (FeedbackStyle & { maxDifference: number })[] = [
+  { maxDifference: 0, color: 'from-green-500 to-emerald-600', emoji: '🎯' }, // Correct
+  { maxDifference: 2, color: 'from-red-700 to-red-600', emoji: '🔥' }, // Extremely hot
+  { maxDifference: 5, color: 'from-red-600 to-orange-600', emoji: '🌡️' }, // Very hot
+  { maxDifference: 10, color: 'from-orange-600 to-yellow-600', emoji: '☀️' }, // Hot to warm
+  { maxDifference: 15, color: 'from-yellow-600 to-amber-600', emoji: '🌤️' }, // Warm
+  { maxDifference: 25, color: 'from-blue-500 to-cyan-500', emoji: '❄️' }, // Cool
+  { maxDifference: Infinity, color: 'from-blue-700 to-indigo-700', emoji: '🧊' }, // Cold
+];
+
+/** Coarse styling used when only the hot/warm/cold bucket is known. */
+const DISTANCE_STYLES: Record<Distance, FeedbackStyle> = {
+  hot: { color: 'from-red-500 to-orange-500', emoji: '🔥' },
+  warm: { color: 'from-yellow-500 to-orange-500', emoji: '☀️' },
+  cold: { color: 'from-blue-500 to-cyan-500', emoji: '❄️' },
+};
+
+const TEMPERATURE_HINTS: Record<Distance, string> = {
+  hot: "... You're very close!",
+  warm: "... You're getting warmer",
+  cold: "... You're cold",
+};
+
+export const generateRandomNumber = (min = 1, max = 100): number => {
   // Using Math.random() is safe here as this is a game application
   // where cryptographic randomness is not required. The predictability
   // of Math.random() does not pose a security risk in this context.
+  // eslint-disable-next-line sonarjs/pseudo-random -- see comment above
   return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
+const getDistance = (difference: number): Distance => {
+  if (difference <= 5) return 'hot';
+  if (difference <= 15) return 'warm';
+  return 'cold';
+};
+
+const getFeedback = (guess: number, target: number): Feedback => {
+  if (guess === target) return 'correct';
+  return guess > target ? 'too-high' : 'too-low';
 };
 
 export const checkGuess = (guess: number, target: number): GuessResult => {
   const difference = Math.abs(guess - target);
 
-  let feedback: 'too-high' | 'too-low' | 'correct';
-  if (guess === target) {
-    feedback = 'correct';
-  } else if (guess > target) {
-    feedback = 'too-high';
-  } else {
-    feedback = 'too-low';
-  }
-
-  let distance: Distance;
-  if (difference === 0) {
-    distance = 'hot';
-  } else if (difference <= 5) {
-    distance = 'hot';
-  } else if (difference <= 15) {
-    distance = 'warm';
-  } else {
-    distance = 'cold';
-  }
-
   return {
     guess,
-    feedback,
-    distance,
+    feedback: getFeedback(guess, target),
+    distance: getDistance(difference),
     difference, // Include actual difference for more precise styling
   };
 };
 
-export const getColorForDistance = (distance: Distance, difference?: number): string => {
-  // More nuanced color gradients based on exact difference with better contrast
-  if (difference !== undefined) {
-    if (difference === 0) {
-      return 'from-green-500 to-emerald-600'; // Correct answer - darker for better contrast
-    } else if (difference <= 2) {
-      return 'from-red-700 to-red-600'; // Extremely hot - darker for contrast
-    } else if (difference <= 5) {
-      return 'from-red-600 to-orange-600'; // Very hot - darker
-    } else if (difference <= 10) {
-      return 'from-orange-600 to-yellow-600'; // Hot to warm - darker
-    } else if (difference <= 15) {
-      return 'from-yellow-600 to-amber-600'; // Warm - darker
-    } else if (difference <= 25) {
-      return 'from-blue-500 to-cyan-500'; // Cool
-    } else {
-      return 'from-blue-700 to-indigo-700'; // Cold - darker
-    }
-  }
-
-  // Fallback to basic colors if difference not provided
-  switch (distance) {
-    case 'hot':
-      return 'from-red-500 to-orange-500';
-    case 'warm':
-      return 'from-yellow-500 to-orange-500';
-    case 'cold':
-      return 'from-blue-500 to-cyan-500';
-    default:
-      return 'from-gray-500 to-gray-600';
-  }
+const getFeedbackStyle = (distance: Distance, difference?: number): FeedbackStyle => {
+  if (difference === undefined) return DISTANCE_STYLES[distance];
+  // The final band is unbounded, so a match is always found for a non-negative difference.
+  return (
+    DIFFERENCE_BANDS.find((band) => difference <= band.maxDifference) ?? DISTANCE_STYLES[distance]
+  );
 };
 
-// New function to get temperature emoji
-export const getTemperatureEmoji = (distance: Distance, difference?: number): string => {
-  if (difference !== undefined) {
-    if (difference === 0) return '🎯';
-    if (difference <= 2) return '🔥';
-    if (difference <= 5) return '🌡️';
-    if (difference <= 10) return '☀️';
-    if (difference <= 15) return '🌤️';
-    if (difference <= 25) return '❄️';
-    return '🧊';
-  }
+export const getColorForDistance = (distance: Distance, difference?: number): string =>
+  getFeedbackStyle(distance, difference).color;
 
-  switch (distance) {
-    case 'hot':
-      return '🔥';
-    case 'warm':
-      return '☀️';
-    case 'cold':
-      return '❄️';
-    default:
-      return '❓';
-  }
-};
+export const getTemperatureEmoji = (distance: Distance, difference?: number): string =>
+  getFeedbackStyle(distance, difference).emoji;
 
-export const getMessageForFeedback = (
-  feedback: 'too-high' | 'too-low' | 'correct',
-  distance: Distance
-): string => {
+export const getMessageForFeedback = (feedback: Feedback, distance: Distance): string => {
   if (feedback === 'correct') {
     return '🎉 Congratulations! You guessed it!';
   }
 
   const direction = feedback === 'too-high' ? 'lower' : 'higher';
-  let temperatureHint: string;
+  const adjective = feedback === 'too-high' ? 'high' : 'low';
 
-  if (distance === 'hot') {
-    temperatureHint = "... You're very close!";
-  } else if (distance === 'warm') {
-    temperatureHint = "... You're getting warmer";
-  } else {
-    temperatureHint = "... You're cold";
-  }
-
-  return `Too ${feedback.split('-')[1]}! Try ${direction}${temperatureHint}`;
+  return `Too ${adjective}! Try ${direction}${TEMPERATURE_HINTS[distance]}`;
 };

@@ -6,6 +6,8 @@ import { Button } from '../UI/Button';
 import { usePlayerStore } from '../../store/playerStore';
 import { useGameStore } from '../../store/gameStore';
 import { PlayerProfile } from './PlayerProfile';
+import { formatAverage } from '../../utils/insights';
+import type { Player } from '../../types';
 
 interface PlayerFormData {
   name: string;
@@ -15,12 +17,54 @@ interface PlayerLoginProps {
   onPlayerSelected?: () => void;
 }
 
-export const PlayerLogin = ({ onPlayerSelected }: PlayerLoginProps = {}) => {
-  const { players, createPlayer, selectPlayer, currentPlayer } = usePlayerStore();
-  const { currentGame, resetGame } = useGameStore();
-  const [isCreating, setIsCreating] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
+interface PlayerListProps {
+  players: Player[];
+  onSelect: (playerId: string) => void;
+}
 
+const PlayerList = ({ players, onSelect }: PlayerListProps) =>
+  players.length > 0 ? (
+    <div className="space-y-2 mb-4">
+      {[...players]
+        .sort((a, b) => {
+          // Sort by last played, most recent first
+          return new Date(b.lastPlayed).getTime() - new Date(a.lastPlayed).getTime();
+        })
+        .map((player, index) => (
+          <motion.button
+            key={player.id}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.05 }}
+            onClick={() => onSelect(player.id)}
+            className="w-full p-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-left transition-all hover:scale-[1.02] group"
+          >
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="font-semibold group-hover:text-purple-400 transition-colors">
+                  {player.name}
+                </p>
+                <p className="text-sm text-gray-400">
+                  {player.gamesPlayed} games • Avg: {formatAverage(player.averageGuesses, 'N/A')}
+                </p>
+              </div>
+              <span className="text-xs text-gray-500">
+                {new Date(player.lastPlayed).toLocaleDateString()}
+              </span>
+            </div>
+          </motion.button>
+        ))}
+    </div>
+  ) : (
+    <p className="text-center text-gray-400 mb-4">No players yet. Create one to start playing!</p>
+  );
+
+interface CreatePlayerFormProps {
+  onCreate: (name: string) => void;
+  onCancel: () => void;
+}
+
+const CreatePlayerForm = ({ onCreate, onCancel }: CreatePlayerFormProps) => {
   const {
     register,
     handleSubmit,
@@ -29,11 +73,54 @@ export const PlayerLogin = ({ onPlayerSelected }: PlayerLoginProps = {}) => {
   } = useForm<PlayerFormData>();
 
   const onSubmit = (data: PlayerFormData) => {
-    createPlayer(data.name);
+    onCreate(data.name);
     reset();
-    setIsCreating(false);
-    onPlayerSelected?.();
   };
+
+  return (
+    <form onSubmit={(e) => void handleSubmit(onSubmit)(e)} className="space-y-4">
+      <div>
+        <input
+          {...register('name', {
+            required: 'Please enter your name',
+            minLength: {
+              value: 2,
+              message: 'Name must be at least 2 characters',
+            },
+            maxLength: {
+              value: 20,
+              message: 'Name must be less than 20 characters',
+            },
+          })}
+          type="text"
+          placeholder="Enter your name"
+          className={`w-full px-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+            errors.name ? 'border-red-500' : 'border-gray-700'
+          }`}
+          // Focus only moves here after the user explicitly clicks "Create New Player"
+          // eslint-disable-next-line jsx-a11y/no-autofocus
+          autoFocus
+        />
+        {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>}
+      </div>
+
+      <div className="flex gap-2">
+        <Button type="submit" className="flex-1">
+          Create Player
+        </Button>
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Cancel
+        </Button>
+      </div>
+    </form>
+  );
+};
+
+export const PlayerLogin = ({ onPlayerSelected }: PlayerLoginProps = {}) => {
+  const { players, createPlayer, selectPlayer, currentPlayer } = usePlayerStore();
+  const { currentGame, resetGame } = useGameStore();
+  const [isCreating, setIsCreating] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   const handleSelectPlayer = (playerId: string) => {
     // Check if we're switching to a different player
@@ -66,7 +153,7 @@ export const PlayerLogin = ({ onPlayerSelected }: PlayerLoginProps = {}) => {
               <div>
                 <p className="text-gray-400 text-sm">Average Guesses</p>
                 <p className="text-xl font-semibold">
-                  {currentPlayer.averageGuesses > 0 ? currentPlayer.averageGuesses.toFixed(1) : '-'}
+                  {formatAverage(currentPlayer.averageGuesses)}
                 </p>
               </div>
             </div>
@@ -111,83 +198,21 @@ export const PlayerLogin = ({ onPlayerSelected }: PlayerLoginProps = {}) => {
 
       {!isCreating ? (
         <>
-          {players.length > 0 ? (
-            <div className="space-y-2 mb-4">
-              {[...players]
-                .sort((a, b) => {
-                  // Sort by last played, most recent first
-                  return new Date(b.lastPlayed).getTime() - new Date(a.lastPlayed).getTime();
-                })
-                .map((player, index) => (
-                  <motion.button
-                    key={player.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    onClick={() => handleSelectPlayer(player.id)}
-                    className="w-full p-3 bg-gray-800 hover:bg-gray-700 rounded-lg text-left transition-all hover:scale-[1.02] group"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-semibold group-hover:text-purple-400 transition-colors">
-                          {player.name}
-                        </p>
-                        <p className="text-sm text-gray-400">
-                          {player.gamesPlayed} games • Avg:{' '}
-                          {player.averageGuesses > 0 ? player.averageGuesses.toFixed(1) : 'N/A'}
-                        </p>
-                      </div>
-                      <span className="text-xs text-gray-500">
-                        {new Date(player.lastPlayed).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </motion.button>
-                ))}
-            </div>
-          ) : (
-            <p className="text-center text-gray-400 mb-4">
-              No players yet. Create one to start playing!
-            </p>
-          )}
+          <PlayerList players={players} onSelect={handleSelectPlayer} />
 
           <Button onClick={() => setIsCreating(true)} variant="secondary" className="w-full">
             Create New Player
           </Button>
         </>
       ) : (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <input
-              {...register('name', {
-                required: 'Please enter your name',
-                minLength: {
-                  value: 2,
-                  message: 'Name must be at least 2 characters',
-                },
-                maxLength: {
-                  value: 20,
-                  message: 'Name must be less than 20 characters',
-                },
-              })}
-              type="text"
-              placeholder="Enter your name"
-              className={`w-full px-4 py-3 bg-gray-800 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                errors.name ? 'border-red-500' : 'border-gray-700'
-              }`}
-              autoFocus
-            />
-            {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>}
-          </div>
-
-          <div className="flex gap-2">
-            <Button type="submit" className="flex-1">
-              Create Player
-            </Button>
-            <Button type="button" variant="ghost" onClick={() => setIsCreating(false)}>
-              Cancel
-            </Button>
-          </div>
-        </form>
+        <CreatePlayerForm
+          onCreate={(name) => {
+            createPlayer(name);
+            setIsCreating(false);
+            onPlayerSelected?.();
+          }}
+          onCancel={() => setIsCreating(false)}
+        />
       )}
     </Card>
   );

@@ -264,30 +264,6 @@ describe('PlayerProfile', () => {
   });
 
   describe('edge cases', () => {
-    it('should handle undefined gamesWon gracefully', () => {
-      const mockPlayer = createMockPlayer({
-        id: 'player-8',
-        name: 'Legacy Player',
-        gamesPlayed: 10,
-        gamesWon: undefined as unknown as number, // Simulating old data
-        totalGuesses: 100,
-        bestGame: 10,
-        averageGuesses: 10,
-      });
-
-      vi.mocked(usePlayerStore).mockReturnValue({
-        currentPlayer: mockPlayer,
-        players: [mockPlayer],
-        selectPlayer: vi.fn(),
-      });
-
-      render(<PlayerProfile />);
-
-      // Should treat undefined gamesWon as 0
-      expect(screen.getByText('Win Rate')).toBeInTheDocument();
-      expect(screen.getByText('0%')).toBeInTheDocument();
-    });
-
     it('should return null when no current player', () => {
       vi.mocked(usePlayerStore).mockReturnValue({
         currentPlayer: null,

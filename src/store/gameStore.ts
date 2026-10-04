@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Game, GameStatus, GuessResult } from '../types';
+import type { Game, GameStatus, GuessResult } from '../types';
 import { generateRandomNumber, checkGuess } from '../utils/gameLogic';
 import { saveGames, loadGames } from '../utils/storage';
 import { usePlayerStore } from './playerStore';
