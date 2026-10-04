@@ -1,3 +1,7 @@
+# Supply-chain policy: only install versions published at least 24 hours ago.
+# Set explicitly so local installs match CI regardless of user-level pnpm config.
+minimumReleaseAge: 1440
+
 allowBuilds:
   '@tailwindcss/oxide': true
   esbuild: true
