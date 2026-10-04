@@ -65,4 +65,4 @@ All shared types are centralized in `src/types/index.ts` (`Player`, `Game`, `Lea
 - Path alias `@` → `src/` is configured for Vitest; prefer relative imports for app code to match the existing codebase.
 - Tests are colocated with source as `*.test.ts(x)`; broader flows live in `src/__tests__/`. Test env is `jsdom` with `@testing-library/react`; global setup in `src/test/setup.ts`.
 - Styling is Tailwind CSS v4 (via `@tailwindcss/vite`) with a purple-pink gradient / dark theme; animations use Framer Motion.
-- `Math.random()` in `generateRandomNumber` is intentional and annotated (`NOSONAR`) — it is not a security issue for this game; don't "fix" it.
+- `Math.random()` in `generateRandomNumber` is intentional and documented with a comment — it is not a security issue for this game; don't "fix" it.
