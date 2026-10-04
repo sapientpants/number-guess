@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useGameStore } from './gameStore';
 import { usePlayerStore } from './playerStore';
 import * as gameLogic from '../utils/gameLogic';
+import { loadGames, saveGames } from '../utils/storage';
+import type { Game } from '../types';
 
 vi.mock('./playerStore');
 vi.mock('../utils/gameLogic');
@@ -65,7 +67,7 @@ describe('gameStore', () => {
           guesses: [],
           isComplete: false,
         });
-        expect(state.currentGame?.id).toMatch(/^game-\d+$/);
+        expect(state.currentGame?.id).toMatch(/^game-\d+-[0-9a-f]{16}$/);
       });
     });
 
@@ -237,7 +239,7 @@ describe('gameStore', () => {
 
       const state = useGameStore.getState();
       expect(state.guesses).toEqual([25, 30]); // No change
-      expect(vi.mocked(gameLogic.checkGuess).mock.calls.length).toBe(callCount);
+      expect(vi.mocked(gameLogic.checkGuess).mock.calls).toHaveLength(callCount);
     });
 
     it('should add guess and result for valid guess', () => {
@@ -330,7 +332,42 @@ describe('gameStore', () => {
 
       const state = useGameStore.getState();
       expect(state.guesses).toEqual([50]); // No new guess added
-      expect(vi.mocked(gameLogic.checkGuess).mock.calls.length).toBe(callCount);
+      expect(vi.mocked(gameLogic.checkGuess).mock.calls).toHaveLength(callCount);
+    });
+  });
+
+  describe('game history persistence', () => {
+    const otherGame: Game = {
+      id: 'game-other',
+      playerId: 'player-2',
+      targetNumber: 10,
+      guesses: [10],
+      isComplete: true,
+      startedAt: new Date('2026-01-01T00:00:00.000Z'),
+      completedAt: new Date('2026-01-01T00:01:00.000Z'),
+    };
+
+    it('stores each guess on a single history record without touching other games', () => {
+      saveGames([otherGame]);
+      vi.mocked(gameLogic.generateRandomNumber).mockReturnValue(50);
+      const store = useGameStore.getState();
+      store.startNewGame('player-1');
+
+      vi.mocked(gameLogic.checkGuess)
+        .mockReturnValueOnce({ guess: 20, feedback: 'too-low', distance: 'cold' })
+        .mockReturnValueOnce({ guess: 50, feedback: 'correct', distance: 'hot' });
+      store.makeGuess(20);
+      store.makeGuess(50);
+
+      const games = loadGames();
+      expect(games).toHaveLength(2);
+      expect(games[0]).toEqual(otherGame);
+      expect(games[1]).toMatchObject({
+        id: useGameStore.getState().currentGame?.id,
+        guesses: [20, 50],
+        isComplete: true,
+      });
+      expect(store.loadGameHistory()).toEqual(games);
     });
   });
 });

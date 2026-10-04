@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { PlayerHeader } from './components/Player/PlayerHeader';
 import { GameBoard } from './components/Game/GameBoard';
-import { LeaderboardTable } from './components/Leaderboard';
+import { LeaderboardTable } from './components/Leaderboard/LeaderboardTable';
 import { usePlayerStore } from './store/playerStore';
 
 function App() {

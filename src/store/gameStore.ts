@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import { Game, GameStatus, GuessResult } from '../types';
+import type { Game, GameStatus, GuessResult } from '../types';
 import { generateRandomNumber, checkGuess } from '../utils/gameLogic';
 import { saveGames, loadGames } from '../utils/storage';
 import { usePlayerStore } from './playerStore';
+import { createId } from '../utils/id';
 
 interface GameState {
   currentGame: Game | null;
@@ -29,7 +30,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const targetNumber = generateRandomNumber(1, 100);
 
     const newGame: Game = {
-      id: `game-${Date.now()}`,
+      id: createId('game'),
       playerId,
       targetNumber,
       guesses: [],
@@ -65,7 +66,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       ...currentGame,
       guesses: newGuesses,
       isComplete: isWon,
-      completedAt: isWon ? new Date() : undefined,
+      ...(isWon && { completedAt: new Date() }),
     };
 
     // Save to localStorage

@@ -4,6 +4,7 @@ import { Card } from '../UI/Card';
 import { Button } from '../UI/Button';
 import { usePlayerStore } from '../../store/playerStore';
 import { useLeaderboardStore } from '../../store/leaderboardStore';
+import { calculateWinRate, formatAverage } from '../../utils/insights';
 
 interface PlayerProfileProps {
   onClose?: () => void;
@@ -41,7 +42,7 @@ export const PlayerProfile = ({
     },
     {
       label: 'Average Guesses',
-      value: currentPlayer.averageGuesses > 0 ? currentPlayer.averageGuesses.toFixed(1) : '-',
+      value: formatAverage(currentPlayer.averageGuesses),
       color: 'text-purple-400',
     },
     {
@@ -51,10 +52,7 @@ export const PlayerProfile = ({
     },
   ];
 
-  const winRate =
-    currentPlayer.gamesPlayed > 0
-      ? Math.round(((currentPlayer.gamesWon || 0) / currentPlayer.gamesPlayed) * 100)
-      : 0;
+  const winRate = calculateWinRate(currentPlayer);
 
   return (
     <Card gradient className="w-full max-w-2xl mx-auto">

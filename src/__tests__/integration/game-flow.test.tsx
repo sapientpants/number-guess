@@ -8,6 +8,7 @@ vi.mock('../../utils/storage', () => ({
   savePlayers: vi.fn(),
   loadPlayers: vi.fn(() => []),
   saveCurrentPlayerId: vi.fn(),
+  clearCurrentPlayerId: vi.fn(),
   loadCurrentPlayerId: vi.fn(() => null),
   saveGames: vi.fn(),
   loadGames: vi.fn(() => []),
@@ -316,9 +317,7 @@ describe('Game Flow Integration Tests', () => {
 
       await userEvent.click(screen.getByRole('button', { name: 'Start New Game' }));
 
-      const guessInput = screen.getByPlaceholderText(
-        'Enter your guess (1-100)'
-      ) as HTMLInputElement;
+      const guessInput = screen.getByPlaceholderText<HTMLInputElement>('Enter your guess (1-100)');
       const form = screen.getByRole('form', { name: 'Number guess form' });
 
       // Try invalid inputs (number input prevents alphabetic characters)
@@ -368,128 +367,49 @@ describe('Game Flow Integration Tests', () => {
 
       // Verify that no new guess was added (still same number of 25s)
       const guessHistoryAfter = screen.getAllByText('25');
-      expect(guessHistoryAfter.length).toBe(guessHistory.length);
+      expect(guessHistoryAfter).toHaveLength(guessHistory.length);
     });
   });
 
   describe('statistics accuracy', () => {
-    it.skip('should calculate statistics correctly across multiple games', async () => {
+    it('should calculate statistics correctly across multiple games', async () => {
       render(<App />);
 
       // Setup player
       await userEvent.click(screen.getByText('Create New Player'));
-      const nameInput = screen.getByPlaceholderText('Enter your name');
-      await userEvent.type(nameInput, 'Stats Test');
+      await userEvent.type(screen.getByPlaceholderText('Enter your name'), 'Stats Test');
       await userEvent.click(screen.getByRole('button', { name: 'Create Player' }));
 
-      // Play first game (win in 2 guesses)
+      const playGame = async (guesses: string[]) => {
+        for (const guess of guesses) {
+          const input = await screen.findByPlaceholderText<HTMLInputElement>(
+            'Enter your guess (1-100)'
+          );
+          await waitFor(() => expect(input).not.toBeDisabled(), { timeout: 3000 });
+          fireEvent.change(input, { target: { value: guess } });
+          fireEvent.submit(screen.getByRole('form', { name: 'Number guess form' }));
+        }
+        await screen.findByText(/You found the number in/);
+      };
+
+      // First game: win in 2 guesses (target is always 50)
+      await userEvent.click(await screen.findByRole('button', { name: 'Start New Game' }));
+      await playGame(['40', '50']);
+
+      // Second game: win in 3 guesses
+      await userEvent.click(screen.getByRole('button', { name: 'Play Again' }));
+      await playGame(['25', '60', '50']);
+
+      // Averages only count won games: (2 + 3) / 2
       await waitFor(() => {
-        expect(screen.getByText('Start New Game')).toBeInTheDocument();
-      });
-      await userEvent.click(screen.getByRole('button', { name: 'Start New Game' }));
-
-      const guessInput = screen.getByPlaceholderText(
-        'Enter your guess (1-100)'
-      ) as HTMLInputElement;
-      const form = screen.getByRole('form', { name: 'Number guess form' });
-
-      fireEvent.change(guessInput, { target: { value: '40' } });
-      fireEvent.submit(form);
-
-      await waitFor(
-        () => {
-          expect(screen.getByText('↑ Too Low')).toBeInTheDocument();
-        },
-        { timeout: 3000 }
-      );
-
-      fireEvent.change(guessInput, { target: { value: '50' } });
-      fireEvent.submit(form);
-
-      await waitFor(() => {
-        expect(screen.getByText(/Congratulations!/)).toBeInTheDocument();
-      });
-
-      // Start second game but abandon it
-      await userEvent.click(screen.getByText('Play Again'));
-
-      // Wait for the game to be in playing state
-      await waitFor(() => {
-        expect(screen.queryByText(/Congratulations!/)).not.toBeInTheDocument();
-      });
-
-      // Wait for the input to be cleared and enabled
-      await waitFor(() => {
-        expect(guessInput.value).toBe('');
-      });
-
-      await waitFor(
-        () => {
-          expect(guessInput).not.toBeDisabled();
-        },
-        { timeout: 3000 }
-      );
-
-      fireEvent.change(guessInput, { target: { value: '30' } });
-      fireEvent.submit(form);
-
-      await waitFor(() => {
-        expect(screen.getByText('Give Up')).toBeInTheDocument();
-      });
-
-      await userEvent.click(screen.getByText('Give Up'));
-
-      // Confirm give up in modal
-      await waitFor(() => {
-        const giveUpButtons = screen.getAllByRole('button', { name: 'Give Up' });
-        expect(giveUpButtons.length).toBeGreaterThan(1);
-      });
-
-      const giveUpButtons2 = screen.getAllByRole('button', { name: 'Give Up' });
-      const modalGiveUpButton = giveUpButtons2[1];
-      if (modalGiveUpButton) {
-        await userEvent.click(modalGiveUpButton);
-      }
-
-      // Start third game and win in 3 guesses
-      await waitFor(() => {
-        expect(screen.getByText('Ready to Play?')).toBeInTheDocument();
-      });
-      await userEvent.click(screen.getByRole('button', { name: 'Start New Game' }));
-
-      await waitFor(() => {
-        expect(guessInput).not.toBeDisabled();
-      });
-
-      fireEvent.change(guessInput, { target: { value: '25' } });
-      fireEvent.submit(form);
-
-      await waitFor(() => {
-        expect(screen.getByText('↑ Too Low')).toBeInTheDocument();
-      });
-
-      fireEvent.change(guessInput, { target: { value: '60' } });
-      fireEvent.submit(form);
-
-      await waitFor(() => {
-        expect(screen.getByText('↓ Too High')).toBeInTheDocument();
-      });
-
-      fireEvent.change(guessInput, { target: { value: '50' } });
-      fireEvent.submit(form);
-
-      // Check final statistics
-      await waitFor(() => {
-        // Check player header shows 3 games
-        const playerHeaders = screen.getAllByText('Stats Test');
-        const playerHeader = playerHeaders[0]?.closest('div');
-        expect(playerHeader?.textContent).toContain('Games: 3');
-
-        // Average should be 2.5 (only counting wins: (2+3)/2)
-        expect(playerHeader?.textContent).toContain('Avg: 2.5');
-
-        // Best game should be 2
-        expect(playerHeader?.textContent).toContain('Best: 2');
+        const player = usePlayerStore.getState().currentPlayer;
+        expect(player).toMatchObject({
+          gamesPlayed: 2,
+          gamesWon: 2,
+          totalGuesses: 5,
+          bestGame: 2,
+          averageGuesses: 2.5,
+        });
       });
     });
   });

@@ -7,6 +7,20 @@ interface GuessFormData {
   guess: string;
 }
 
+const EDITING_KEYS = ['Delete', 'Backspace', 'Tab', 'Escape', 'Enter'];
+const NAVIGATION_KEYS = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+const CLIPBOARD_SHORTCUT_KEYS = ['a', 'c', 'v', 'x'];
+
+/**
+ * Whether a keystroke may reach the numeric guess input.
+ * `hasShortcutModifier` is Ctrl, or Cmd on macOS, so select-all and the clipboard work everywhere.
+ */
+const isAllowedKey = (key: string, hasShortcutModifier: boolean): boolean =>
+  EDITING_KEYS.includes(key) ||
+  NAVIGATION_KEYS.includes(key) ||
+  (hasShortcutModifier && CLIPBOARD_SHORTCUT_KEYS.includes(key)) ||
+  /^\d$/.test(key);
+
 export const GuessInput = () => {
   const { makeGuess, gameStatus, guesses } = useGameStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,8 +41,8 @@ export const GuessInput = () => {
     }
   }, [guesses.length, isSubmitting, gameStatus]);
 
-  const onSubmit = async (data: GuessFormData) => {
-    const guessNumber = parseInt(data.guess);
+  const onSubmit = (data: GuessFormData) => {
+    const guessNumber = parseInt(data.guess, 10);
 
     // Don't submit if it's a duplicate guess - show validation error
     if (guesses.includes(guessNumber)) {
@@ -63,8 +77,8 @@ export const GuessInput = () => {
       message: 'Number must be between 1 and 100',
     },
     validate: (value) => {
-      const num = parseInt(value);
-      if (isNaN(num)) return 'Please enter a valid number';
+      const num = parseInt(value, 10);
+      if (Number.isNaN(num)) return 'Please enter a valid number';
       return true;
     },
   });
@@ -75,7 +89,11 @@ export const GuessInput = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" aria-label="Number guess form">
+    <form
+      onSubmit={(e) => void handleSubmit(onSubmit)(e)}
+      className="space-y-4"
+      aria-label="Number guess form"
+    >
       <div>
         <label htmlFor="guess-input" className="sr-only">
           Enter your guess between 1 and 100
@@ -93,38 +111,23 @@ export const GuessInput = () => {
             errors.guess ? 'border-red-500' : 'border-gray-700'
           }`}
           disabled={isDisabled}
-          autoFocus
           aria-invalid={!!errors.guess}
           aria-describedby={errors.guess ? 'guess-error' : undefined}
           onKeyDown={(e) => {
             // Ensure Enter key submits the form
             if (e.key === 'Enter' && !isDisabled) {
               e.preventDefault();
-              handleSubmit(onSubmit)();
+              void handleSubmit(onSubmit)();
             }
-            // Allow: backspace, delete, tab, escape, enter
-            if (
-              ['Delete', 'Backspace', 'Tab', 'Escape', 'Enter'].includes(e.key) ||
-              // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
-              (e.key === 'a' && e.ctrlKey === true) ||
-              (e.key === 'c' && e.ctrlKey === true) ||
-              (e.key === 'v' && e.ctrlKey === true) ||
-              (e.key === 'x' && e.ctrlKey === true)
-            ) {
-              return;
-            }
-            // Ensure that it is a number and stop the keypress
-            if (
-              !/^\d$/.test(e.key) &&
-              !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)
-            ) {
+            // Block anything that isn't a digit, editing, navigation or clipboard key
+            if (!isAllowedKey(e.key, e.ctrlKey || e.metaKey)) {
               e.preventDefault();
             }
           }}
           onInput={(e) => {
             // Remove any non-digit characters
-            const target = e.target as HTMLInputElement;
-            target.value = target.value.replace(/[^\d]/g, '');
+            const target = e.currentTarget;
+            target.value = target.value.replace(/\D/g, '');
           }}
         />
         {errors.guess && (

@@ -3,50 +3,40 @@ import { usePlayerStore } from '../../store/playerStore';
 import { useGameStore } from '../../store/gameStore';
 import { Card } from '../UI/Card';
 import { getTemperatureEmoji } from '../../utils/gameLogic';
-import { Game } from '../../types';
+import {
+  calculateStreaks,
+  getCompletedGames,
+  getPerformanceTier,
+  summarizeGames,
+  type PerformanceTier,
+} from '../../utils/insights';
+
+const TIER_BACKGROUND: Record<PerformanceTier, string> = {
+  best: 'bg-green-900/20',
+  good: 'bg-yellow-900/20',
+  normal: 'bg-gray-800/30',
+};
+
+interface InsightTile {
+  key: string;
+  visible: boolean;
+  emoji: string;
+  value: number;
+  label: string;
+  gradient: string;
+  valueColor: string;
+  delay?: number;
+}
 
 export const GameInsights = () => {
   const { currentPlayer } = usePlayerStore();
   const { loadGameHistory, currentGame, guesses } = useGameStore();
 
-  const getPerformanceBackgroundClass = (guessCount: number, player: typeof currentPlayer) => {
-    if (!player) return 'bg-gray-800/30';
-    if (guessCount <= player.bestGame) return 'bg-green-900/20';
-    if (guessCount <= player.averageGuesses) return 'bg-yellow-900/20';
-    return 'bg-gray-800/30';
-  };
-
-  const calculateStreaks = (games: Game[], avgGuesses: number) => {
-    let currentStreak = 0;
-    let bestStreak = 0;
-    let tempStreak = 0;
-
-    for (const game of games) {
-      if (game.guesses.length <= avgGuesses) {
-        tempStreak++;
-        bestStreak = Math.max(bestStreak, tempStreak);
-      } else {
-        if (currentStreak === 0) currentStreak = tempStreak;
-        tempStreak = 0;
-      }
-    }
-    if (currentStreak === 0) currentStreak = tempStreak;
-
-    return { currentStreak, bestStreak };
-  };
-
   if (!currentPlayer) return null;
 
-  // Get this player's game history
-  const allGames = loadGameHistory();
-  const playerGames = allGames
-    .filter((game) => game.playerId === currentPlayer.id && game.isComplete)
-    .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime());
-
-  // Calculate insights
-  const totalGuesses = playerGames.reduce((sum, game) => sum + game.guesses.length, 0);
-  const gamesUnder5 = playerGames.filter((game) => game.guesses.length <= 5).length;
-  const perfectGames = playerGames.filter((game) => game.guesses.length === 1).length;
+  const playerGames = getCompletedGames(loadGameHistory(), currentPlayer.id);
+  const { totalGuesses, gamesUnder5, perfectGames } = summarizeGames(playerGames);
+  const { currentStreak, bestStreak } = calculateStreaks(playerGames, currentPlayer.averageGuesses);
 
   // Current game progress
   const currentProgress =
@@ -57,8 +47,47 @@ export const GameInsights = () => {
         }
       : null;
 
-  // Calculate streaks
-  const { currentStreak, bestStreak } = calculateStreaks(playerGames, currentPlayer.averageGuesses);
+  const tiles: InsightTile[] = [
+    {
+      key: 'perfect',
+      visible: perfectGames > 0,
+      emoji: '🎯',
+      value: perfectGames,
+      label: `Perfect ${perfectGames === 1 ? 'Game' : 'Games'}`,
+      gradient: 'from-green-900/20 to-emerald-900/20',
+      valueColor: 'text-green-400',
+    },
+    {
+      key: 'under5',
+      visible: gamesUnder5 > 0,
+      emoji: '⭐',
+      value: gamesUnder5,
+      label: 'Under 5 Guesses',
+      gradient: 'from-yellow-900/20 to-amber-900/20',
+      valueColor: 'text-yellow-400',
+      delay: 0.1,
+    },
+    {
+      key: 'current-streak',
+      visible: currentStreak > 2,
+      emoji: '🔥',
+      value: currentStreak,
+      label: 'Current Streak',
+      gradient: 'from-purple-900/20 to-pink-900/20',
+      valueColor: 'text-purple-400',
+      delay: 0.2,
+    },
+    {
+      key: 'best-streak',
+      visible: bestStreak > 3,
+      emoji: '🏆',
+      value: bestStreak,
+      label: 'Best Streak',
+      gradient: 'from-blue-900/20 to-cyan-900/20',
+      valueColor: 'text-blue-400',
+      delay: 0.3,
+    },
+  ];
 
   return (
     <div className="space-y-4">
@@ -86,58 +115,21 @@ export const GameInsights = () => {
         <h3 className="text-sm font-semibold mb-3 text-gray-400">Game Insights</h3>
 
         <div className="grid grid-cols-2 gap-3">
-          {perfectGames > 0 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 rounded-lg p-3 text-center"
-            >
-              <p className="text-2xl mb-1">🎯</p>
-              <p className="text-lg font-bold text-green-400">{perfectGames}</p>
-              <p className="text-xs text-gray-400">
-                Perfect {perfectGames === 1 ? 'Game' : 'Games'}
-              </p>
-            </motion.div>
-          )}
-
-          {gamesUnder5 > 0 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1 }}
-              className="bg-gradient-to-br from-yellow-900/20 to-amber-900/20 rounded-lg p-3 text-center"
-            >
-              <p className="text-2xl mb-1">⭐</p>
-              <p className="text-lg font-bold text-yellow-400">{gamesUnder5}</p>
-              <p className="text-xs text-gray-400">Under 5 Guesses</p>
-            </motion.div>
-          )}
-
-          {currentStreak > 2 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 rounded-lg p-3 text-center"
-            >
-              <p className="text-2xl mb-1">🔥</p>
-              <p className="text-lg font-bold text-purple-400">{currentStreak}</p>
-              <p className="text-xs text-gray-400">Current Streak</p>
-            </motion.div>
-          )}
-
-          {bestStreak > 3 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 }}
-              className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 rounded-lg p-3 text-center"
-            >
-              <p className="text-2xl mb-1">🏆</p>
-              <p className="text-lg font-bold text-blue-400">{bestStreak}</p>
-              <p className="text-xs text-gray-400">Best Streak</p>
-            </motion.div>
-          )}
+          {tiles
+            .filter((tile) => tile.visible)
+            .map((tile) => (
+              <motion.div
+                key={tile.key}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: tile.delay ?? 0 }}
+                className={`bg-gradient-to-br ${tile.gradient} rounded-lg p-3 text-center`}
+              >
+                <p className="text-2xl mb-1">{tile.emoji}</p>
+                <p className={`text-lg font-bold ${tile.valueColor}`}>{tile.value}</p>
+                <p className="text-xs text-gray-400">{tile.label}</p>
+              </motion.div>
+            ))}
         </div>
 
         {/* Fun fact */}
@@ -167,7 +159,7 @@ export const GameInsights = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className={`flex-1 text-center p-2 rounded ${getPerformanceBackgroundClass(game.guesses.length, currentPlayer)}`}
+                className={`flex-1 text-center p-2 rounded ${TIER_BACKGROUND[getPerformanceTier(game.guesses.length, currentPlayer)]}`}
               >
                 <p className="text-lg font-bold">{game.guesses.length}</p>
               </motion.div>

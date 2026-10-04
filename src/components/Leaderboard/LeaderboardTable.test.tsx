@@ -4,7 +4,7 @@ import { LeaderboardTable } from './LeaderboardTable';
 import { useLeaderboardStore } from '../../store/leaderboardStore';
 import { usePlayerStore } from '../../store/playerStore';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
-import { Player } from '../../types';
+import type { Player } from '../../types';
 
 vi.mock('../../store/leaderboardStore');
 vi.mock('../../store/playerStore');

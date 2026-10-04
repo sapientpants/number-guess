@@ -1,11 +1,13 @@
 import { create } from 'zustand';
-import { Player } from '../types';
+import type { Player } from '../types';
 import {
   savePlayers,
   loadPlayers,
   saveCurrentPlayerId,
+  clearCurrentPlayerId,
   loadCurrentPlayerId,
 } from '../utils/storage';
+import { createId } from '../utils/id';
 
 interface PlayerState {
   players: Player[];
@@ -20,101 +22,82 @@ interface PlayerState {
   getCurrentPlayer: () => Player | null;
 }
 
-export const usePlayerStore = create<PlayerState>((set, get) => ({
-  players: [],
-  currentPlayer: null,
-
-  loadPlayers: () => {
-    const players = loadPlayers();
-    const currentPlayerId = loadCurrentPlayerId();
-    const currentPlayer = currentPlayerId
-      ? players.find((p) => p.id === currentPlayerId) || null
-      : null;
-
-    set({ players, currentPlayer });
-  },
-
-  createPlayer: (name) => {
-    const newPlayer: Player = {
-      id: `player-${Date.now()}`,
-      name,
-      gamesPlayed: 0,
-      gamesWon: 0,
-      totalGuesses: 0,
-      bestGame: 0,
-      averageGuesses: 0,
-      lastPlayed: new Date(),
-    };
-
-    const players = [...get().players, newPlayer];
+export const usePlayerStore = create<PlayerState>((set, get) => {
+  /** Applies `update` to one player, persists all players, and makes that player current. */
+  const updatePlayer = (playerId: string, update: (player: Player) => Partial<Player>) => {
+    const players = get().players.map((player) =>
+      player.id === playerId ? { ...player, ...update(player), lastPlayed: new Date() } : player
+    );
     savePlayers(players);
-    saveCurrentPlayerId(newPlayer.id);
+    set({ players, currentPlayer: players.find((p) => p.id === playerId) ?? null });
+  };
 
-    set({ players, currentPlayer: newPlayer });
-    return newPlayer;
-  },
+  return {
+    players: [],
+    currentPlayer: null,
 
-  selectPlayer: (playerId) => {
-    if (!playerId) {
-      // Clear selection
-      saveCurrentPlayerId('');
-      set({ currentPlayer: null });
-      return;
-    }
+    loadPlayers: () => {
+      const players = loadPlayers();
+      const currentPlayerId = loadCurrentPlayerId();
+      const currentPlayer = currentPlayerId
+        ? (players.find((p) => p.id === currentPlayerId) ?? null)
+        : null;
 
-    const player = get().players.find((p) => p.id === playerId);
-    if (player) {
-      saveCurrentPlayerId(playerId);
-      set({ currentPlayer: player });
-    }
-  },
+      set({ players, currentPlayer });
+    },
 
-  updatePlayerStats: (playerId, guessCount) => {
-    const players = get().players.map((player) => {
-      if (player.id === playerId) {
-        const gamesWon = (player.gamesWon || 0) + 1;
+    createPlayer: (name) => {
+      const newPlayer: Player = {
+        id: createId('player'),
+        name,
+        gamesPlayed: 0,
+        gamesWon: 0,
+        totalGuesses: 0,
+        bestGame: 0,
+        averageGuesses: 0,
+        lastPlayed: new Date(),
+      };
+
+      const players = [...get().players, newPlayer];
+      savePlayers(players);
+      saveCurrentPlayerId(newPlayer.id);
+
+      set({ players, currentPlayer: newPlayer });
+      return newPlayer;
+    },
+
+    selectPlayer: (playerId) => {
+      if (!playerId) {
+        clearCurrentPlayerId();
+        set({ currentPlayer: null });
+        return;
+      }
+
+      const player = get().players.find((p) => p.id === playerId);
+      if (player) {
+        saveCurrentPlayerId(playerId);
+        set({ currentPlayer: player });
+      }
+    },
+
+    updatePlayerStats: (playerId, guessCount) => {
+      updatePlayer(playerId, (player) => {
+        const gamesWon = player.gamesWon + 1;
         const totalGuesses = player.totalGuesses + guessCount;
-        const bestGame = player.bestGame === 0 ? guessCount : Math.min(player.bestGame, guessCount);
-        const averageGuesses = totalGuesses / gamesWon;
-
         return {
-          ...player,
           gamesWon,
           totalGuesses,
-          bestGame,
-          averageGuesses,
-          lastPlayed: new Date(),
+          bestGame: player.bestGame === 0 ? guessCount : Math.min(player.bestGame, guessCount),
+          averageGuesses: totalGuesses / gamesWon,
         };
-      }
-      return player;
-    });
+      });
+    },
 
-    savePlayers(players);
+    incrementGamesPlayed: (playerId) => {
+      // Don't recalculate average - it should only consider won games
+      updatePlayer(playerId, (player) => ({ gamesPlayed: player.gamesPlayed + 1 }));
+    },
 
-    const currentPlayer = players.find((p) => p.id === playerId) || null;
-    set({ players, currentPlayer });
-  },
-
-  incrementGamesPlayed: (playerId) => {
-    const players = get().players.map((player) => {
-      if (player.id === playerId) {
-        const gamesPlayed = player.gamesPlayed + 1;
-        // Don't recalculate average - it should only consider won games
-
-        return {
-          ...player,
-          gamesPlayed,
-          lastPlayed: new Date(),
-        };
-      }
-      return player;
-    });
-
-    savePlayers(players);
-
-    const currentPlayer = players.find((p) => p.id === playerId) || null;
-    set({ players, currentPlayer });
-  },
-
-  getCurrentPlayer: () => get().currentPlayer,
-}));
+    getCurrentPlayer: () => get().currentPlayer,
+  };
+});

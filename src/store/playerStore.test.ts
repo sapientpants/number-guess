@@ -27,7 +27,7 @@ describe('playerStore', () => {
         bestGame: 0,
         averageGuesses: 0,
       });
-      expect(player.id).toMatch(/^player-\d+$/);
+      expect(player.id).toMatch(/^player-\d+-[0-9a-f]{16}$/);
       expect(storage.savePlayers).toHaveBeenCalledWith([player]);
       expect(storage.saveCurrentPlayerId).toHaveBeenCalledWith(player.id);
     });
@@ -191,7 +191,7 @@ describe('playerStore', () => {
 
       store.selectPlayer('');
       expect(usePlayerStore.getState().currentPlayer).toBeNull();
-      expect(storage.saveCurrentPlayerId).toHaveBeenCalledWith('');
+      expect(storage.clearCurrentPlayerId).toHaveBeenCalled();
     });
 
     it('should not change current player for invalid ID', () => {
@@ -311,6 +311,58 @@ describe('playerStore', () => {
         bestGame: 10,
         averageGuesses: 50 / 3, // Total guesses / games won
       });
+    });
+  });
+
+  describe('with several players', () => {
+    const seed = () => {
+      const store = usePlayerStore.getState();
+      const alice = store.createPlayer('Alice');
+      const bob = store.createPlayer('Bob');
+      vi.clearAllMocks();
+      return { alice, bob };
+    };
+
+    it('increments games played for the target player only, and persists', () => {
+      const { alice, bob } = seed();
+
+      usePlayerStore.getState().incrementGamesPlayed(bob.id);
+
+      const { players, currentPlayer } = usePlayerStore.getState();
+      expect(players.find((p) => p.id === alice.id)?.gamesPlayed).toBe(0);
+      expect(players.find((p) => p.id === bob.id)?.gamesPlayed).toBe(1);
+      expect(currentPlayer?.id).toBe(bob.id);
+      expect(storage.savePlayers).toHaveBeenCalledWith(players);
+    });
+
+    it('records a win for the target player only, and persists', () => {
+      const { alice, bob } = seed();
+
+      usePlayerStore.getState().updatePlayerStats(alice.id, 4);
+
+      const { players, currentPlayer } = usePlayerStore.getState();
+      expect(players.find((p) => p.id === alice.id)?.gamesWon).toBe(1);
+      expect(players.find((p) => p.id === bob.id)?.gamesWon).toBe(0);
+      expect(currentPlayer?.id).toBe(alice.id);
+      expect(storage.savePlayers).toHaveBeenCalledWith(players);
+    });
+
+    it('persists the selected player id', () => {
+      const { alice } = seed();
+
+      usePlayerStore.getState().selectPlayer(alice.id);
+
+      expect(usePlayerStore.getState().currentPlayer?.id).toBe(alice.id);
+      expect(storage.saveCurrentPlayerId).toHaveBeenCalledWith(alice.id);
+    });
+
+    it('ignores selection of an unknown player', () => {
+      const { bob } = seed();
+
+      usePlayerStore.getState().selectPlayer('missing');
+
+      expect(usePlayerStore.getState().currentPlayer?.id).toBe(bob.id);
+      expect(storage.saveCurrentPlayerId).not.toHaveBeenCalled();
     });
   });
 });

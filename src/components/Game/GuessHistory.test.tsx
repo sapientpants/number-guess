@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { GuessHistory } from './GuessHistory';
 import { useGameStore } from '../../store/gameStore';
-import { GuessResult } from '../../types';
+import type { GuessResult } from '../../types';
 
 vi.mock('../../store/gameStore');
 

@@ -1,11 +1,13 @@
-import { ReactNode, forwardRef } from 'react';
-import { motion, HTMLMotionProps } from 'framer-motion';
+import type { ReactNode } from 'react';
+import { forwardRef } from 'react';
+import type { HTMLMotionProps } from 'framer-motion';
+import { motion } from 'framer-motion';
 
-type ButtonBaseProps = {
+interface ButtonBaseProps {
   children: ReactNode;
   variant?: 'primary' | 'secondary' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
-};
+}
 
 type ButtonProps = ButtonBaseProps & Omit<HTMLMotionProps<'button'>, keyof ButtonBaseProps>;
 

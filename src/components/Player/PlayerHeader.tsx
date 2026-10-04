@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../../store/playerStore';
 import { PlayerProfile } from './PlayerProfile';
 import { PlayerLogin } from './PlayerLogin';
+import { formatAverage } from '../../utils/insights';
 
 export const PlayerHeader = () => {
   const { currentPlayer, selectPlayer } = usePlayerStore();
@@ -44,7 +45,7 @@ export const PlayerHeader = () => {
                 // If we have players, select the first one
                 const players = usePlayerStore.getState().players;
                 if (players.length > 0 && !currentPlayer) {
-                  selectPlayer(players[0]?.id || '');
+                  selectPlayer(players[0]?.id ?? '');
                 }
               }}
               className="px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700/50 rounded-md transition-all"
@@ -92,10 +93,7 @@ export const PlayerHeader = () => {
               <div className="flex gap-3 text-sm text-gray-400">
                 <span>Games: {currentPlayer.gamesPlayed}</span>
                 <span>•</span>
-                <span>
-                  Avg:{' '}
-                  {currentPlayer.averageGuesses > 0 ? currentPlayer.averageGuesses.toFixed(1) : '-'}
-                </span>
+                <span>Avg: {formatAverage(currentPlayer.averageGuesses)}</span>
                 {currentPlayer.bestGame > 0 && (
                   <>
                     <span>•</span>

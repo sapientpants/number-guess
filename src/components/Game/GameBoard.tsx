@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '../UI/Card';
 import { Button } from '../UI/Button';
@@ -11,6 +11,31 @@ import { usePlayerStore } from '../../store/playerStore';
 
 type RightPanelTab = 'history' | 'stats';
 
+interface TabButtonProps {
+  tab: RightPanelTab;
+  activeTab: RightPanelTab;
+  onSelect: (tab: RightPanelTab) => void;
+  children: ReactNode;
+}
+
+const TabButton = ({ tab, activeTab, onSelect, children }: TabButtonProps) => {
+  const isActive = tab === activeTab;
+  return (
+    <button
+      onClick={() => onSelect(tab)}
+      className={`flex-1 px-4 py-2 rounded-md font-medium transition-all min-h-[44px] ${
+        isActive ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white'
+      }`}
+      role="tab"
+      aria-selected={isActive}
+      aria-controls={`${tab}-panel`}
+      id={`${tab}-tab`}
+    >
+      {children}
+    </button>
+  );
+};
+
 export const GameBoard = () => {
   const { gameStatus, startNewGame, resetGame, guesses, currentGame } = useGameStore();
 
@@ -19,13 +44,7 @@ export const GameBoard = () => {
 
   // Update player stats when game is won
   useEffect(() => {
-    if (
-      gameStatus === 'won' &&
-      currentGame &&
-      currentPlayer &&
-      currentGame.isComplete &&
-      currentGame.completedAt
-    ) {
+    if (gameStatus === 'won' && currentPlayer && currentGame?.isComplete) {
       // Use game ID to ensure we only update once per game
       const statsKey = `stats-updated-${currentGame.id}`;
       if (!sessionStorage.getItem(statsKey)) {
@@ -91,7 +110,7 @@ export const GameBoard = () => {
               className="mt-6 text-center"
             >
               <p className="text-2xl font-bold text-green-400 mb-4">
-                🎉 Congratulations{currentPlayer ? `, ${currentPlayer.name}` : ''}! 🎉
+                🎉 Congratulations, {currentPlayer.name}! 🎉
               </p>
               <p className="text-gray-300 mb-4">
                 You found the number in {guesses.length}{' '}
@@ -112,30 +131,12 @@ export const GameBoard = () => {
           role="tablist"
           aria-label="Game information tabs"
         >
-          <button
-            onClick={() => setActiveTab('history')}
-            className={`flex-1 px-4 py-2 rounded-md font-medium transition-all min-h-[44px] ${
-              activeTab === 'history' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white'
-            }`}
-            role="tab"
-            aria-selected={activeTab === 'history'}
-            aria-controls="history-panel"
-            id="history-tab"
-          >
+          <TabButton tab="history" activeTab={activeTab} onSelect={setActiveTab}>
             History
-          </button>
-          <button
-            onClick={() => setActiveTab('stats')}
-            className={`flex-1 px-4 py-2 rounded-md font-medium transition-all min-h-[44px] ${
-              activeTab === 'stats' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white'
-            }`}
-            role="tab"
-            aria-selected={activeTab === 'stats'}
-            aria-controls="stats-panel"
-            id="stats-tab"
-          >
+          </TabButton>
+          <TabButton tab="stats" activeTab={activeTab} onSelect={setActiveTab}>
             Insights
-          </button>
+          </TabButton>
         </div>
 
         {/* Tab Content */}

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { LeaderboardEntry } from '../types';
+import type { LeaderboardEntry } from '../types';
 import { calculateLeaderboard } from '../utils/storage';
 import { usePlayerStore } from './playerStore';
 
@@ -16,7 +16,7 @@ export const useLeaderboardStore = create<LeaderboardState>((set, get) => ({
 
   updateLeaderboard: () => {
     const players = usePlayerStore.getState().players;
-    const entries = calculateLeaderboard(players, []);
+    const entries = calculateLeaderboard(players);
     set({ entries });
   },
 
