@@ -203,6 +203,24 @@ describe('GuessInput', () => {
       // The input should still be in the document (not removed/disabled)
       expect(input).toBeInTheDocument();
     });
+
+    // fireEvent returns false when the handler called preventDefault()
+    it.each(['a', 'c', 'v', 'x'])('allows Ctrl or Cmd + %s', (key) => {
+      render(<GuessInput />);
+      const input = screen.getByPlaceholderText('Enter your guess (1-100)');
+
+      expect(fireEvent.keyDown(input, { key, ctrlKey: true })).toBe(true);
+      expect(fireEvent.keyDown(input, { key, metaKey: true })).toBe(true);
+    });
+
+    it('blocks letters without a shortcut modifier', () => {
+      render(<GuessInput />);
+      const input = screen.getByPlaceholderText('Enter your guess (1-100)');
+
+      expect(fireEvent.keyDown(input, { key: 'v' })).toBe(false);
+      expect(fireEvent.keyDown(input, { key: 'e' })).toBe(false);
+      expect(fireEvent.keyDown(input, { key: '7' })).toBe(true);
+    });
   });
 
   describe('form behavior', () => {

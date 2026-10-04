@@ -83,23 +83,29 @@ const allDefined = <T extends object>(fields: T): fields is Defined<T> =>
 
 // --- Parsers ----------------------------------------------------------------------------------
 
-/** Validates a stored player record. Returns `null` for anything malformed. */
+/**
+ * Validates a stored player record. Returns `null` only when the player can't be identified
+ * (missing id or name). Invalid or missing stats are reset to 0 rather than dropping the player:
+ * the filtered list is written back on the next save, so rejecting a record would delete it.
+ * This also covers records saved before win tracking was introduced, which have no `gamesWon`.
+ */
 export const parsePlayer = (value: unknown): Player | null => {
   if (!isRecord(value)) return null;
 
-  const fields = {
-    id: asText(value['id']),
-    name: asText(value['name']),
-    gamesPlayed: asCount(value['gamesPlayed']),
-    // Records saved before win tracking was introduced have no `gamesWon`.
-    gamesWon: asCount(value['gamesWon'] ?? 0),
-    totalGuesses: asCount(value['totalGuesses']),
-    bestGame: asCount(value['bestGame']),
-    averageGuesses: asCount(value['averageGuesses']),
-    lastPlayed: asDate(value['lastPlayed']),
-  };
+  const id = asText(value['id']);
+  const name = asText(value['name']);
+  if (id === undefined || name === undefined) return null;
 
-  return allDefined(fields) ? fields : null;
+  return {
+    id,
+    name,
+    gamesPlayed: asCount(value['gamesPlayed']) ?? 0,
+    gamesWon: asCount(value['gamesWon']) ?? 0,
+    totalGuesses: asCount(value['totalGuesses']) ?? 0,
+    bestGame: asCount(value['bestGame']) ?? 0,
+    averageGuesses: asCount(value['averageGuesses']) ?? 0,
+    lastPlayed: asDate(value['lastPlayed']) ?? new Date(0),
+  };
 };
 
 /** Validates a stored game record. Returns `null` for anything malformed. */

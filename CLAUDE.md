@@ -51,7 +51,7 @@ Consequence: `averageGuesses = totalGuesses / gamesWon` — averaged over **won 
 
 `src/utils/storage.ts` is the only module that touches `localStorage` (keys: `number-guess-players`, `number-guess-games`, `number-guess-current-player`). Store actions call these save/load helpers directly.
 
-`localStorage` is treated as untrusted (ADR 0004): every loaded record goes through `parsePlayer` / `parseGame`, which validate types, rehydrate `Date` fields from strings, drop malformed records, and normalize legacy data (missing `gamesWon` → `0`). Reads and writes never throw. When adding a persisted field, add it to the matching parser (with a default if older data may lack it).
+`localStorage` is treated as untrusted (ADR 0004): every loaded record goes through `parsePlayer` / `parseGame`, which validate types and rehydrate `Date` fields from strings. Players are dropped only without a valid id/name — bad stats reset to 0 (dropping would delete them on the next save); malformed games are dropped. Reads and writes never throw. When adding a persisted field, add it to the matching parser (with a default if older data may lack it).
 
 Ids come from `createId(prefix)` in `src/utils/id.ts` — don't use `Date.now()` alone (it collides).
 

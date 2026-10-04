@@ -11,11 +11,14 @@ const EDITING_KEYS = ['Delete', 'Backspace', 'Tab', 'Escape', 'Enter'];
 const NAVIGATION_KEYS = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
 const CLIPBOARD_SHORTCUT_KEYS = ['a', 'c', 'v', 'x'];
 
-/** Whether a keystroke may reach the numeric guess input. */
-const isAllowedKey = (key: string, ctrlKey: boolean): boolean =>
+/**
+ * Whether a keystroke may reach the numeric guess input.
+ * `hasShortcutModifier` is Ctrl, or Cmd on macOS, so select-all and the clipboard work everywhere.
+ */
+const isAllowedKey = (key: string, hasShortcutModifier: boolean): boolean =>
   EDITING_KEYS.includes(key) ||
   NAVIGATION_KEYS.includes(key) ||
-  (ctrlKey && CLIPBOARD_SHORTCUT_KEYS.includes(key)) ||
+  (hasShortcutModifier && CLIPBOARD_SHORTCUT_KEYS.includes(key)) ||
   /^\d$/.test(key);
 
 export const GuessInput = () => {
@@ -117,7 +120,7 @@ export const GuessInput = () => {
               void handleSubmit(onSubmit)();
             }
             // Block anything that isn't a digit, editing, navigation or clipboard key
-            if (!isAllowedKey(e.key, e.ctrlKey)) {
+            if (!isAllowedKey(e.key, e.ctrlKey || e.metaKey)) {
               e.preventDefault();
             }
           }}

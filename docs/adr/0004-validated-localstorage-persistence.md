@@ -14,7 +14,10 @@ which case `localStorage` methods throw.
 
 - `src/utils/storage.ts` remains the only module that touches `localStorage`.
 - Every loaded record passes through a parser (`parsePlayer`, `parseGame`) that validates field
-  types and rehydrates dates. Invalid records are dropped; valid ones are kept.
+  types and rehydrates dates.
+- A player is dropped only if it can't be identified (missing id or name). Invalid or missing
+  stats are reset to 0 instead, because the filtered list is written back on the next save, so
+  dropping a player would permanently delete them. Malformed games are dropped.
 - Legacy records are normalized at this boundary (missing `gamesWon` becomes `0`; an empty
   current-player id means "none"), so the rest of the app can trust its types.
 - Reads and writes never throw: if storage is unavailable the game keeps working in memory.

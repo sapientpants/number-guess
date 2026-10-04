@@ -70,14 +70,23 @@ describe('player persistence', () => {
     expect(loadPlayers()).toEqual([]);
   });
 
-  it('drops malformed records but keeps valid ones', () => {
+  it('drops records that cannot be identified', () => {
     const valid = makePlayer();
     localStorage.setItem(
       PLAYERS_KEY,
-      JSON.stringify([valid, { id: 'broken' }, null, 'player', { ...valid, gamesPlayed: -1 }])
+      JSON.stringify([valid, { id: 'no-name' }, { name: 'No id' }, null, 'player'])
     );
 
     expect(loadPlayers()).toEqual([valid]);
+  });
+
+  it('keeps a player with corrupt stats through a load/save cycle', () => {
+    const corrupt = { ...makePlayer(), gamesPlayed: -1, averageGuesses: null };
+    localStorage.setItem(PLAYERS_KEY, JSON.stringify([corrupt]));
+
+    savePlayers(loadPlayers());
+
+    expect(loadPlayers()).toEqual([{ ...makePlayer(), gamesPlayed: 0, averageGuesses: 0 }]);
   });
 
   it('defaults gamesWon to 0 for legacy records saved before win tracking', () => {
@@ -93,12 +102,23 @@ describe('parsePlayer', () => {
     ['a non-object', 42],
     ['an array', []],
     ['a missing name', { ...makePlayer(), name: undefined }],
-    ['a non-numeric count', { ...makePlayer(), gamesPlayed: '3' }],
-    ['a non-finite average', { ...makePlayer(), averageGuesses: Number.POSITIVE_INFINITY }],
-    ['an invalid date', { ...makePlayer(), lastPlayed: 'not a date' }],
-    ['a non-date lastPlayed', { ...makePlayer(), lastPlayed: { year: 2026 } }],
+    ['a missing id', { ...makePlayer(), id: undefined }],
+    ['a non-string id', { ...makePlayer(), id: 7 }],
   ])('rejects %s', (_label, value) => {
     expect(parsePlayer(value)).toBeNull();
+  });
+
+  it.each([
+    ['a non-numeric count', { gamesPlayed: '3' }, { gamesPlayed: 0 }],
+    ['a negative count', { totalGuesses: -4 }, { totalGuesses: 0 }],
+    ['a non-finite average', { averageGuesses: Number.POSITIVE_INFINITY }, { averageGuesses: 0 }],
+    ['an invalid date', { lastPlayed: 'not a date' }, { lastPlayed: new Date(0) }],
+    ['a non-date lastPlayed', { lastPlayed: { year: 2026 } }, { lastPlayed: new Date(0) }],
+  ])('resets %s instead of dropping the player', (_label, corruption, expected) => {
+    expect(parsePlayer({ ...makePlayer(), ...corruption })).toEqual({
+      ...makePlayer(),
+      ...expected,
+    });
   });
 });
 
