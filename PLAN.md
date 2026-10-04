@@ -137,3 +137,34 @@ Also format all files (not just `src/**/*.{ts,tsx}`) with Prettier, matching the
 - `pnpm mutation-test` runs and reports a score.
 - `actionlint` passes on all workflows.
 - App still builds and behaves identically (no gameplay changes).
+
+## Implementation notes
+
+All phases are implemented on `chore/adopt-starter-quality-tooling`. Deviations from the plan
+and things discovered along the way:
+
+- **Dead components removed.** `Modal`, `PlayerStats` and `GameHistory` were never rendered
+  anywhere; they and their tests were deleted rather than linted. Restore from git history if
+  they're wanted back in the UI.
+- **Bug fixed — id collisions.** Mutation testing showed that `player-${Date.now()}` /
+  `game-${Date.now()}` ids collide when two records are created in the same millisecond, and
+  stat updates then hit both. Ids now come from `createId()` with a random suffix.
+- **Stryker runs with the command runner.** `@stryker-mutator/vitest-runner` 10 silently fails
+  to activate mutants under Vitest 5 (every mutant "survives" without tests running). The
+  command runner is slower (~4 min) but correct; mutation score is ~95%.
+- **`@eslint/markdown` instead of `markdownlint-cli2`.** The latter pulls in `braces`, which has
+  an advisory with no patched release, and would fail `pnpm audit`.
+- **Peer-range allowances** for `eslint-plugin-jsx-a11y` (ESLint 10) and `madge` (TypeScript 6)
+  are in `pnpm-workspace.yaml`; both work at runtime. A `qs` override patches a vulnerable
+  transitive dependency of Stryker.
+- **Outcome:** coverage 81% → 97% statements / 79% → 94% branches, 128 → 205 tests (0 skipped),
+  type-aware lint clean, `pnpm ci` green.
+
+### Found but not changed (behavior decisions for the maintainer)
+
+- **Leaderboard ranks non-winners first.** `calculateLeaderboard` includes players with
+  `gamesPlayed > 0`, but a player who has played without winning has `averageGuesses = 0` and so
+  sorts to rank #1. Filtering on `gamesWon > 0` would fix it.
+- **"Switch to another player" in the profile modal ends with no player selected.**
+  `PlayerProfile` selects the clicked player, then `PlayerHeader`'s `onSwitchPlayer` calls
+  `selectPlayer('')` 100 ms later, dropping the user back on the login screen.
