@@ -1,7 +1,16 @@
 {
   "version": "0.2",
   "language": "en",
-  "words": ["autocannon", "esbuild", "opencode", "sapientpants", "Tremblay", "vite"],
+  "words": [
+    "autocannon",
+    "esbuild",
+    "namerc",
+    "Nygard",
+    "opencode",
+    "sapientpants",
+    "Tremblay",
+    "vite"
+  ],
   "ignorePaths": [
     "node_modules/**",
     "dist/**",
