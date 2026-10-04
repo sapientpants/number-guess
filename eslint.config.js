@@ -51,7 +51,11 @@ export default tseslint.config(
       'max-nested-callbacks': ['error', 3],
 
       // Type-aware strictness
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true },
+      ],
+      'sonarjs/no-unused-vars': 'off', // duplicate of the TypeScript rule above
       '@typescript-eslint/no-unnecessary-condition': 'error',
       '@typescript-eslint/switch-exhaustiveness-check': 'error',
       '@typescript-eslint/no-confusing-void-expression': ['error', { ignoreArrowShorthand: true }],

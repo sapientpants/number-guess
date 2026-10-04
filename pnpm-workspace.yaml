@@ -1,3 +1,12 @@
 allowBuilds:
   '@tailwindcss/oxide': true
   esbuild: true
+
+peerDependencyRules:
+  allowedVersions:
+    # jsx-a11y works with ESLint 10 but hasn't widened its peer range yet.
+    eslint-plugin-jsx-a11y>eslint: '10'
+
+overrides:
+  # Transitive via @stryker-mutator/core > typed-rest-client (dev-only).
+  qs: '>=6.16.0'

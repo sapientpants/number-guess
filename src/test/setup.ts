@@ -1,19 +1,35 @@
 import '@testing-library/jest-dom/vitest';
-import { vi } from 'vitest';
+import { afterEach, vi } from 'vitest';
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-  length: 0,
-  key: vi.fn(),
+/** Minimal in-memory Storage so persistence code runs against realistic semantics. */
+const createMemoryStorage = (): Storage => {
+  const store = new Map<string, string>();
+  return {
+    getItem: (key) => store.get(key) ?? null,
+    setItem: (key, value) => {
+      store.set(key, String(value));
+    },
+    removeItem: (key) => {
+      store.delete(key);
+    },
+    clear: () => {
+      store.clear();
+    },
+    key: (index) => [...store.keys()][index] ?? null,
+    get length() {
+      return store.size;
+    },
+  };
 };
 
 Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock,
+  value: createMemoryStorage(),
   writable: true,
+});
+
+afterEach(() => {
+  localStorage.clear();
+  sessionStorage.clear();
 });
 
 // Mock window.matchMedia

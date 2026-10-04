@@ -7,6 +7,7 @@ import {
   clearCurrentPlayerId,
   loadCurrentPlayerId,
 } from '../utils/storage';
+import { createId } from '../utils/id';
 
 interface PlayerState {
   players: Player[];
@@ -37,7 +38,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
   createPlayer: (name) => {
     const newPlayer: Player = {
-      id: `player-${Date.now()}`,
+      id: createId('player'),
       name,
       gamesPlayed: 0,
       gamesWon: 0,

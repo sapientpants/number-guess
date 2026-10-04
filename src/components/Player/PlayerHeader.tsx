@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../../store/playerStore';
 import { PlayerProfile } from './PlayerProfile';
 import { PlayerLogin } from './PlayerLogin';
+import { formatAverage } from '../../utils/insights';
 
 export const PlayerHeader = () => {
   const { currentPlayer, selectPlayer } = usePlayerStore();
@@ -92,10 +93,7 @@ export const PlayerHeader = () => {
               <div className="flex gap-3 text-sm text-gray-400">
                 <span>Games: {currentPlayer.gamesPlayed}</span>
                 <span>•</span>
-                <span>
-                  Avg:{' '}
-                  {currentPlayer.averageGuesses > 0 ? currentPlayer.averageGuesses.toFixed(1) : '-'}
-                </span>
+                <span>Avg: {formatAverage(currentPlayer.averageGuesses)}</span>
                 {currentPlayer.bestGame > 0 && (
                   <>
                     <span>•</span>
