@@ -52,6 +52,23 @@ export const GuessInput = () => {
 
   const isDisabled = gameStatus !== 'playing' || isSubmitting;
 
+  const guessField = register('guess', {
+    required: 'Please enter a number',
+    min: {
+      value: 1,
+      message: 'Number must be between 1 and 100',
+    },
+    max: {
+      value: 100,
+      message: 'Number must be between 1 and 100',
+    },
+    validate: (value) => {
+      const num = parseInt(value);
+      if (isNaN(num)) return 'Please enter a valid number';
+      return true;
+    },
+  });
+
   // Don't render the form when the game is won
   if (gameStatus === 'won') {
     return null;
@@ -64,25 +81,10 @@ export const GuessInput = () => {
           Enter your guess between 1 and 100
         </label>
         <input
-          {...register('guess', {
-            required: 'Please enter a number',
-            min: {
-              value: 1,
-              message: 'Number must be between 1 and 100',
-            },
-            max: {
-              value: 100,
-              message: 'Number must be between 1 and 100',
-            },
-            validate: (value) => {
-              const num = parseInt(value);
-              if (isNaN(num)) return 'Please enter a valid number';
-              return true;
-            },
-          })}
+          {...guessField}
           id="guess-input"
           ref={(e) => {
-            register('guess').ref(e);
+            guessField.ref(e);
             inputRef.current = e;
           }}
           type="number"
