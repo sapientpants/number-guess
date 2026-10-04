@@ -1,9 +1,21 @@
 {
   "name": "number-guess",
   "version": "1.0.0",
-  "description": "",
-  "main": "dist/index.js",
+  "description": "A colourful number guessing game (1-100) with player stats and a leaderboard, built with React, TypeScript and Vite.",
+  "keywords": [
+    "react",
+    "typescript",
+    "vite",
+    "game"
+  ],
+  "author": "Marc Tremblay",
+  "license": "ISC",
+  "private": true,
   "type": "module",
+  "packageManager": "pnpm@12.9.1",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -20,10 +32,20 @@
     "prepare": "husky",
     "ci": "pnpm audit --audit-level=low && pnpm run format:check && pnpm run lint && pnpm run check-types && pnpm run build && pnpm run test:coverage"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@12.9.1",
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --check",
+      "eslint",
+      "tsc-files --noEmit"
+    ]
+  },
+  "dependencies": {
+    "framer-motion": "^14.0.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-hook-form": "^7.89.0",
+    "zustand": "^5.0.15"
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.3",
@@ -50,19 +72,5 @@
     "typescript": "^6.0.3",
     "vite": "^8.3.2",
     "vitest": "^5.0.3"
-  },
-  "dependencies": {
-    "framer-motion": "^14.0.0",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
-    "react-hook-form": "^7.89.0",
-    "zustand": "^5.0.15"
-  },
-  "lint-staged": {
-    "*.{ts,tsx}": [
-      "prettier --check",
-      "eslint",
-      "tsc-files --noEmit"
-    ]
   }
 }

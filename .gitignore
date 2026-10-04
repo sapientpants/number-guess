@@ -12,3 +12,10 @@ coverage/
 
 # Claude local settings
 .claude/*.local.*
+# Build artifacts accidentally emitted by tsc -b
+/vite.config.js
+/vite.config.d.ts
+
+# Quality tooling reports
+reports/
+.stryker-tmp/
