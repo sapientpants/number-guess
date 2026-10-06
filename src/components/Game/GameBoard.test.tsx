@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import { GameBoard } from './GameBoard';
 import { useGameStore } from '../../store/gameStore';
 import { usePlayerStore } from '../../store/playerStore';
-import { emitter } from '../../store/eventEmitter';
+
 import type { Player } from '../../types';
 
 // Mock the stores

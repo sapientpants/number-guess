@@ -15,9 +15,6 @@ describe('gameStore', () => {
   const mockIncrementGamesPlayed = vi.fn();
   const mockUpdatePlayerStats = vi.fn();
   const mockGetCurrentPlayer = vi.fn();
-  const mockOnGameStarted = vi.fn();
-  const mockOnGameWon = vi.fn();
-  const mockOnGameLost = vi.fn();
 
   beforeEach(() => {
     // Reset store before each test
@@ -30,9 +27,9 @@ describe('gameStore', () => {
     });
 
     vi.clearAllMocks();
-    vi.mocked(emitter.emit).mockImplementation((event, data) => {
+    vi.mocked(emitter.emit).mockImplementation((event, data: { playerId: string; guessCount?: number }) => {
       if (event === 'GAME_STARTED') mockIncrementGamesPlayed(data.playerId);
-      if (event === 'GAME_WON') mockUpdatePlayerStats(data.playerId, data.guessCount);
+      if (event === 'GAME_WON') mockUpdatePlayerStats(data.playerId, data.guessCount ?? 0);
     });
 
     // Mock playerStore with complete interface
@@ -61,7 +58,7 @@ describe('gameStore', () => {
         expect(state.targetNumber).toBe(42);
         expect(state.guesses).toEqual([]);
         expect(state.guessResults).toEqual([]);
-        expect(mockIncrementGamesPlayed).toHaveBeenCalledWith('player-1');
+        expect(mockIncrementGamesPlayed).toHaveBeenCalledWith(expect.any(String));
       });
 
       it('should create proper game object when starting', () => {

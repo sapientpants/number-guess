@@ -1,5 +1,5 @@
 /* eslint-disable complexity */
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '../UI/Card';
 import { Button } from '../UI/Button';
@@ -9,7 +9,6 @@ import { GameStats } from './GameStats';
 import { GameInsights } from '../Player/GameInsights';
 import { useGameStore } from '../../store/gameStore';
 import { usePlayerStore } from '../../store/playerStore';
-import { emitter } from '../../store/eventEmitter';
 import type { Game } from '../../types';
 import { saveGames } from '../../utils/storage';
 
@@ -43,7 +42,7 @@ const TabButton = ({ tab, activeTab, onSelect, children }: TabButtonProps) => {
 export const GameBoard = () => {
   const { gameStatus, startNewGame, resetGame, guesses, currentGame } = useGameStore();
 
-  const { currentPlayer, updatePlayerStats } = usePlayerStore();
+  const { currentPlayer } = usePlayerStore();
   const [activeTab, setActiveTab] = useState<RightPanelTab>('history');
 
   // Player stats are updated via the GAME_WON event in gameStore.ts
