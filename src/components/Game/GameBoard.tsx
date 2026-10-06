@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import { useState, useEffect, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '../UI/Card';
@@ -45,17 +46,7 @@ export const GameBoard = () => {
   const { currentPlayer, updatePlayerStats } = usePlayerStore();
   const [activeTab, setActiveTab] = useState<RightPanelTab>('history');
 
-  // Update player stats when game is won
-  useEffect(() => {
-    if (gameStatus === 'won' && currentPlayer && currentGame?.isComplete) {
-      // Use game ID to ensure we only update once per game
-      const statsKey = `stats-updated-${currentGame.id}`;
-      if (!sessionStorage.getItem(statsKey)) {
-        updatePlayerStats(currentPlayer.id, currentGame.guesses.length);
-        sessionStorage.setItem(statsKey, 'true');
-      }
-    }
-  }, [gameStatus, currentGame, currentPlayer, updatePlayerStats]);
+  // Player stats are updated via the GAME_WON event in gameStore.ts
 
   // Guard against race conditions during win state
   if (gameStatus === 'won' && !currentPlayer) {
@@ -70,32 +61,31 @@ export const GameBoard = () => {
   };
 
   const handleGiveUp = () => {
-    if (currentGame && currentPlayer) {
-      const updatedGame: Game = {
-        ...currentGame,
-        isComplete: true,
-        status: 'lost',
-        completedAt: new Date(),
-      };
+    if (!currentGame || !currentPlayer) return;
 
-      // Save to localStorage
-      const allGames = useGameStore.getState().loadGameHistory();
-      const gameIndex = allGames.findIndex((g) => g.id === currentGame.id);
-      if (gameIndex >= 0) {
-        allGames[gameIndex] = updatedGame;
-      } else {
-        allGames.push(updatedGame);
-      }
-      saveGames(allGames);
+    const updatedGame: Game = {
+      ...currentGame,
+      isComplete: true,
+      status: 'lost',
+      completedAt: new Date(),
+    };
 
-      // Update game state
-      useGameStore.getState().resetGame();
-      const { startNewGame } = useGameStore.getState();
-      startNewGame(currentPlayer.id);
-
-      // Emit event
-      emitter.emit('GAME_LOST', { playerId: currentPlayer.id });
+    // Save to localStorage
+    const allGames = useGameStore.getState().loadGameHistory();
+    const gameIndex = allGames.findIndex((g) => g.id === currentGame.id);
+    if (gameIndex >= 0) {
+      allGames[gameIndex] = updatedGame;
+    } else {
+      allGames.push(updatedGame);
     }
+    saveGames(allGames);
+
+    // Reset and start new game
+    useGameStore.getState().resetGame();
+    const { startNewGame } = useGameStore.getState();
+    startNewGame(currentPlayer.id);
+
+    // GAME_LOST event is emitted in gameStore.ts
   };
 
   if (!currentPlayer) {
@@ -169,9 +159,7 @@ export const GameBoard = () => {
               <p className="text-2xl font-bold text-red-400 mb-4">
                 😢 Game Over, {currentPlayer.name}!
               </p>
-              <p className="text-gray-300 mb-4">
-                The number was {currentGame?.targetNumber}.
-              </p>
+              <p className="text-gray-300 mb-4">The number was {currentGame?.targetNumber}.</p>
               <Button onClick={handleNewGame} variant="secondary">
                 Try Again
               </Button>

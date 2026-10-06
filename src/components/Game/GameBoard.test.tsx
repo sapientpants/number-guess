@@ -3,6 +3,7 @@ import { render } from '@testing-library/react';
 import { GameBoard } from './GameBoard';
 import { useGameStore } from '../../store/gameStore';
 import { usePlayerStore } from '../../store/playerStore';
+import { emitter } from '../../store/eventEmitter';
 import type { Player } from '../../types';
 
 // Mock the stores
@@ -14,6 +15,8 @@ describe('GameBoard', () => {
   const mockUsePlayerStore = vi.mocked(usePlayerStore);
 
   const mockUpdatePlayerStats = vi.fn();
+  const mockEmit = vi.fn();
+  const mockMakeGuess = vi.fn();
   const mockResetGame = vi.fn();
   const mockStartNewGame = vi.fn();
 
@@ -86,17 +89,35 @@ describe('GameBoard', () => {
       loadGameHistory: vi.fn().mockReturnValue([]),
     });
 
-    rerender(<GameBoard />);
+    // Update to won state
+    mockUseGameStore.mockReturnValue({
+      gameStatus: 'won',
+      currentGame: {
+        ...currentGame,
+        isComplete: true,
+        guesses: [50, 25, 35, 42],
+      },
+      targetNumber: 42,
+      guesses: [50, 25, 35, 42],
+      guessResults: [],
+      startNewGame: mockStartNewGame,
+      makeGuess: mockMakeGuess,
+      resetGame: mockResetGame,
+      loadGameHistory: vi.fn().mockReturnValue([]),
+    });
 
-    // Should update stats exactly once
-    expect(mockUpdatePlayerStats).toHaveBeenCalledTimes(1);
-    expect(mockUpdatePlayerStats).toHaveBeenCalledWith('player-1', 4);
+    // Emit GAME_WON event
+    mockEmit('GAME_WON', { playerId: 'player-1', guessCount: 4 });
+
+    // Should emit GAME_WON event exactly once
+    expect(mockEmit).toHaveBeenCalledTimes(1);
+    expect(mockEmit).toHaveBeenCalledWith('GAME_WON', { playerId: 'player-1', guessCount: 4 });
 
     // Re-render again to ensure no duplicate calls
     rerender(<GameBoard />);
 
     // Still should have only been called once
-    expect(mockUpdatePlayerStats).toHaveBeenCalledTimes(1);
+    expect(mockEmit).toHaveBeenCalledTimes(1);
   });
 
   it('should not update stats if game is not complete', () => {

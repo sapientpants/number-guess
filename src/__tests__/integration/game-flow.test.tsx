@@ -404,12 +404,22 @@ describe('Game Flow Integration Tests', () => {
       await waitFor(() => {
         const player = usePlayerStore.getState().currentPlayer;
         expect(player).toMatchObject({
-          gamesPlayed: 2,
-          gamesWon: 2,
-          totalGuesses: 5,
+          gamesPlayed: 2, // 2 wins
+          gamesWon: 2, // Only won games
+          totalGuesses: 5, // Only won games
           bestGame: 2,
           averageGuesses: 2.5,
         });
+      });
+
+      // Third game: lose
+      await userEvent.click(screen.getByRole('button', { name: 'Play Again' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Give Up' }));
+
+      // gamesWon should still be 2
+      await waitFor(() => {
+        const player = usePlayerStore.getState().currentPlayer;
+        expect(player?.gamesWon).toBe(2);
       });
     });
   });

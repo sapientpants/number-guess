@@ -3,7 +3,10 @@ import { useGameStore } from './gameStore';
 import { usePlayerStore } from './playerStore';
 import * as gameLogic from '../utils/gameLogic';
 import { loadGames, saveGames } from '../utils/storage';
+import { emitter } from './eventEmitter';
 import type { Game } from '../types';
+
+vi.mock('./eventEmitter');
 
 vi.mock('./playerStore');
 vi.mock('../utils/gameLogic');
@@ -12,6 +15,9 @@ describe('gameStore', () => {
   const mockIncrementGamesPlayed = vi.fn();
   const mockUpdatePlayerStats = vi.fn();
   const mockGetCurrentPlayer = vi.fn();
+  const mockOnGameStarted = vi.fn();
+  const mockOnGameWon = vi.fn();
+  const mockOnGameLost = vi.fn();
 
   beforeEach(() => {
     // Reset store before each test
@@ -24,6 +30,10 @@ describe('gameStore', () => {
     });
 
     vi.clearAllMocks();
+    vi.mocked(emitter.emit).mockImplementation((event, data) => {
+      if (event === 'GAME_STARTED') mockIncrementGamesPlayed(data.playerId);
+      if (event === 'GAME_WON') mockUpdatePlayerStats(data.playerId, data.guessCount);
+    });
 
     // Mock playerStore with complete interface
     vi.mocked(usePlayerStore.getState).mockReturnValue({

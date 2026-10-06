@@ -48,10 +48,11 @@ const readJsonArray = (key: string): unknown[] => {
   }
 };
 
-const loadList = <T>(key: string, parse: (value: unknown) => T): T[] =>
+const loadList = <T>(key: string, parse: (value: unknown) => T | null): T[] =>
   readJsonArray(key).flatMap((item) => {
     try {
-      return [parse(item)];
+      const parsed = parse(item);
+      return parsed === null ? [] : [parsed];
     } catch {
       return [];
     }

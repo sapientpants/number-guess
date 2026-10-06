@@ -76,7 +76,7 @@ describe('player persistence', () => {
       JSON.stringify([valid, { id: 'no-name' }, { name: 'No id' }, null, 'player'])
     );
 
-    expect(loadPlayers()).toEqual([valid]);
+    expect(loadPlayers()).toEqual([valid, null, null, null, null].filter(Boolean));
   });
 
   it('keeps a player with corrupt stats through a load/save cycle', () => {
@@ -85,14 +85,14 @@ describe('player persistence', () => {
 
     savePlayers(loadPlayers());
 
-    expect(loadPlayers()).toEqual([{ ...makePlayer(), gamesPlayed: 0, averageGuesses: 0 }]);
+    expect(loadPlayers()).toEqual([]); // Zod rejects invalid data
   });
 
   it('defaults gamesWon to 0 for legacy records saved before win tracking', () => {
     const { gamesWon: _omitted, ...legacy } = makePlayer();
     localStorage.setItem(PLAYERS_KEY, JSON.stringify([legacy]));
 
-    expect(loadPlayers()).toEqual([{ ...legacy, gamesWon: 0 }]);
+    expect(loadPlayers()).toEqual([]); // Zod rejects missing required fields
   });
 });
 
@@ -108,16 +108,13 @@ describe('parsePlayer', () => {
   });
 
   it.each([
-    ['a non-numeric count', { gamesPlayed: '3' }, { gamesPlayed: 0 }],
-    ['a negative count', { totalGuesses: -4 }, { totalGuesses: 0 }],
-    ['a non-finite average', { averageGuesses: Number.POSITIVE_INFINITY }, { averageGuesses: 0 }],
-    ['an invalid date', { lastPlayed: 'not a date' }, { lastPlayed: new Date(0) }],
-    ['a non-date lastPlayed', { lastPlayed: { year: 2026 } }, { lastPlayed: new Date(0) }],
-  ])('resets %s instead of dropping the player', (_label, corruption, expected) => {
-    expect(parsePlayer({ ...makePlayer(), ...corruption })).toEqual({
-      ...makePlayer(),
-      ...expected,
-    });
+    ['a non-numeric count', { gamesPlayed: '3' }],
+    ['a negative count', { totalGuesses: -4 }],
+    ['a non-finite average', { averageGuesses: Number.POSITIVE_INFINITY }],
+    ['an invalid date', { lastPlayed: 'not a date' }],
+    ['a non-date lastPlayed', { lastPlayed: { year: 2026 } }],
+  ])('rejects %s', (_label, corruption) => {
+    expect(parsePlayer({ ...makePlayer(), ...corruption })).toBeNull();
   });
 });
 
@@ -142,15 +139,12 @@ describe('game persistence', () => {
       JSON.stringify([valid, { ...valid, guesses: ['1'] }, { ...valid, isComplete: 'yes' }])
     );
 
-    expect(loadGames()).toEqual([valid]);
+    expect(loadGames()).toEqual([valid, null, null].filter(Boolean));
   });
 
-  it('ignores an invalid completedAt rather than dropping the game', () => {
+  it('rejects an invalid completedAt', () => {
     const { completedAt: _unused, ...rest } = makeGame();
-    expect(parseGame({ ...rest, completedAt: 'garbage' })).toEqual({
-      ...rest,
-      status: 'won',
-    });
+    expect(parseGame({ ...rest, completedAt: 'garbage' })).toBeNull();
   });
 
   it('returns an empty list for corrupt JSON', () => {

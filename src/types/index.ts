@@ -46,7 +46,22 @@ export type GameStatus = z.infer<typeof GameSchema.shape.status>;
 export type GuessResult = z.infer<typeof GuessResultSchema>;
 
 // Parsers
-export const parsePlayer = (data: unknown): Player => PlayerSchema.parse(data);
-export const parseGame = (data: unknown): Game => GameSchema.parse(data);
-export const parseLeaderboardEntry = (data: unknown): LeaderboardEntry => LeaderboardEntrySchema.parse(data);
+export const parsePlayer = (data: unknown): Player | null => {
+  try {
+    return PlayerSchema.parse(data);
+  } catch {
+    return null;
+  }
+};
+
+export const parseGame = (data: unknown): Game | null => {
+  try {
+    return GameSchema.parse(data);
+  } catch {
+    return null;
+  }
+};
+
+export const parseLeaderboardEntry = (data: unknown): LeaderboardEntry =>
+  LeaderboardEntrySchema.parse(data);
 export const parseGuessResult = (data: unknown): GuessResult => GuessResultSchema.parse(data);
