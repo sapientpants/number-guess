@@ -27,10 +27,12 @@ describe('gameStore', () => {
     });
 
     vi.clearAllMocks();
-    vi.mocked(emitter.emit).mockImplementation((event, data: { playerId: string; guessCount?: number }) => {
-      if (event === 'GAME_STARTED') mockIncrementGamesPlayed(data.playerId);
-      if (event === 'GAME_WON') mockUpdatePlayerStats(data.playerId, data.guessCount ?? 0);
-    });
+    vi.mocked(emitter.emit).mockImplementation(
+      (event, data: { playerId: string; guessCount?: number }) => {
+        if (event === 'GAME_STARTED') mockIncrementGamesPlayed(data.playerId);
+        if (event === 'GAME_WON') mockUpdatePlayerStats(data.playerId, data.guessCount ?? 0);
+      }
+    );
 
     // Mock playerStore with complete interface
     vi.mocked(usePlayerStore.getState).mockReturnValue({
