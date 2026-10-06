@@ -94,8 +94,8 @@
   "pnpm": {
     "audit": {
       "ignore": {
-        "GHSA-238p-pmpm-9mq7": {
-          "reason": "Low-severity vulnerability in transitive dependency (katex). Will be fixed in a future update."
+        "GHSA-238p-pnpm-9mq7": {
+          "reason": "Low-severity vulnerability in transitive dependency. Will be fixed in a future update."
         }
       }
     }
