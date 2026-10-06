@@ -29,6 +29,7 @@ describe('GameInsights', () => {
     startedAt: new Date(),
     isComplete: true,
     completedAt: new Date(),
+    status: 'won',
   });
 
   beforeEach(() => {
@@ -263,6 +264,7 @@ describe('GameInsights', () => {
       guesses: [1, 2, 3],
       startedAt: new Date(),
       isComplete: false,
+      status: 'playing',
     };
 
     vi.mocked(usePlayerStore).mockReturnValue({

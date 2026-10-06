@@ -36,6 +36,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       guesses: [],
       isComplete: false,
       startedAt: new Date(),
+      status: 'playing',
     };
 
     // Increment games played count when starting a new game
@@ -66,6 +67,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       ...currentGame,
       guesses: newGuesses,
       isComplete: isWon,
+      status: isWon ? 'won' : 'playing',
       ...(isWon && { completedAt: new Date() }),
     };
 

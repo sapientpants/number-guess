@@ -66,6 +66,7 @@ describe('gameStore', () => {
           targetNumber: 50,
           guesses: [],
           isComplete: false,
+          status: 'playing',
         });
         expect(state.currentGame?.id).toMatch(/^game-\d+-[0-9a-f]{16}$/);
       });
@@ -107,7 +108,7 @@ describe('gameStore', () => {
         expect(state.currentGame?.isComplete).toBe(true);
       });
 
-      it('should mark game as complete when winning', () => {
+      it('should mark game as complete and set status to won when winning', () => {
         vi.mocked(gameLogic.generateRandomNumber).mockReturnValue(50);
         const store = useGameStore.getState();
         store.startNewGame('player-1');
@@ -122,6 +123,7 @@ describe('gameStore', () => {
 
         const state = useGameStore.getState();
         expect(state.currentGame?.isComplete).toBe(true);
+        expect(state.currentGame?.status).toBe('won');
         expect(state.currentGame?.completedAt).toBeDefined();
       });
     });
@@ -345,6 +347,7 @@ describe('gameStore', () => {
       isComplete: true,
       startedAt: new Date('2026-01-01T00:00:00.000Z'),
       completedAt: new Date('2026-01-01T00:01:00.000Z'),
+      status: 'won',
     };
 
     it('stores each guess on a single history record without touching other games', () => {

@@ -6,13 +6,11 @@ import {
   loadCurrentPlayerId,
   loadGames,
   loadPlayers,
-  parseGame,
-  parsePlayer,
   saveCurrentPlayerId,
   saveGames,
   savePlayers,
 } from './storage';
-import type { Game, Player } from '../types';
+import { parseGame, parsePlayer, type Game, type Player } from '../types';
 
 const PLAYERS_KEY = 'number-guess-players';
 const GAMES_KEY = 'number-guess-games';
@@ -38,6 +36,7 @@ const makeGame = (overrides: Partial<Game> = {}): Game => ({
   isComplete: true,
   startedAt: new Date('2026-01-02T03:00:00.000Z'),
   completedAt: new Date('2026-01-02T03:01:00.000Z'),
+  status: 'won',
   ...overrides,
 });
 
@@ -148,7 +147,10 @@ describe('game persistence', () => {
 
   it('ignores an invalid completedAt rather than dropping the game', () => {
     const { completedAt: _unused, ...rest } = makeGame();
-    expect(parseGame({ ...rest, completedAt: 'garbage' })).toEqual(rest);
+    expect(parseGame({ ...rest, completedAt: 'garbage' })).toEqual({
+      ...rest,
+      status: 'won',
+    });
   });
 
   it('returns an empty list for corrupt JSON', () => {
