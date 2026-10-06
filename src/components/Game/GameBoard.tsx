@@ -8,6 +8,9 @@ import { GameStats } from './GameStats';
 import { GameInsights } from '../Player/GameInsights';
 import { useGameStore } from '../../store/gameStore';
 import { usePlayerStore } from '../../store/playerStore';
+import { emitter } from '../../store/eventEmitter';
+import type { Game } from '../../types';
+import { saveGames } from '../../utils/storage';
 
 type RightPanelTab = 'history' | 'stats';
 
@@ -66,6 +69,35 @@ export const GameBoard = () => {
     }
   };
 
+  const handleGiveUp = () => {
+    if (currentGame && currentPlayer) {
+      const updatedGame: Game = {
+        ...currentGame,
+        isComplete: true,
+        status: 'lost',
+        completedAt: new Date(),
+      };
+
+      // Save to localStorage
+      const allGames = useGameStore.getState().loadGameHistory();
+      const gameIndex = allGames.findIndex((g) => g.id === currentGame.id);
+      if (gameIndex >= 0) {
+        allGames[gameIndex] = updatedGame;
+      } else {
+        allGames.push(updatedGame);
+      }
+      saveGames(allGames);
+
+      // Update game state
+      useGameStore.getState().resetGame();
+      const { startNewGame } = useGameStore.getState();
+      startNewGame(currentPlayer.id);
+
+      // Emit event
+      emitter.emit('GAME_LOST', { playerId: currentPlayer.id });
+    }
+  };
+
   if (!currentPlayer) {
     return (
       <Card>
@@ -99,6 +131,11 @@ export const GameBoard = () => {
 
         <div className="mt-8">
           <GuessInput />
+          <div className="mt-4 flex justify-center">
+            <Button onClick={handleGiveUp} variant="secondary" size="sm">
+              Give Up
+            </Button>
+          </div>
         </div>
 
         <AnimatePresence>
@@ -118,6 +155,25 @@ export const GameBoard = () => {
               </p>
               <Button onClick={handleNewGame} variant="secondary">
                 Play Again
+              </Button>
+            </motion.div>
+          )}
+
+          {gameStatus === 'lost' && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="mt-6 text-center"
+            >
+              <p className="text-2xl font-bold text-red-400 mb-4">
+                😢 Game Over, {currentPlayer.name}!
+              </p>
+              <p className="text-gray-300 mb-4">
+                The number was {currentGame?.targetNumber}.
+              </p>
+              <Button onClick={handleNewGame} variant="secondary">
+                Try Again
               </Button>
             </motion.div>
           )}

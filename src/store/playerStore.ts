@@ -7,6 +7,7 @@ import {
   clearCurrentPlayerId,
   loadCurrentPlayerId,
 } from '../utils/storage';
+import { emitter } from './eventEmitter';
 import { createId } from '../utils/id';
 
 interface PlayerState {
@@ -31,6 +32,19 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     savePlayers(players);
     set({ players, currentPlayer: players.find((p) => p.id === playerId) ?? null });
   };
+
+  // Listen to events
+  emitter.on('GAME_STARTED', ({ playerId }) => {
+    get().incrementGamesPlayed(playerId);
+  });
+
+  emitter.on('GAME_WON', ({ playerId, guessCount }) => {
+    get().updatePlayerStats(playerId, guessCount);
+  });
+
+  emitter.on('GAME_LOST', ({ playerId }) => {
+    get().incrementGamesPlayed(playerId);
+  });
 
   return {
     players: [],
