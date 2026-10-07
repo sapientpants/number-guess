@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { Game, GameStatus, GuessResult } from '../types';
 import { generateRandomNumber, checkGuess } from '../utils/gameLogic';
 import { saveGames, loadGames } from '../utils/storage';
-import { usePlayerStore } from './playerStore';
+import { emitter } from './eventEmitter';
 import { createId } from '../utils/id';
 
 interface GameState {
@@ -36,10 +36,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       guesses: [],
       isComplete: false,
       startedAt: new Date(),
+      status: 'playing',
     };
 
-    // Increment games played count when starting a new game
-    usePlayerStore.getState().incrementGamesPlayed(playerId);
+    // Emit event to increment games played count
+    emitter.emit('GAME_STARTED', { playerId });
 
     set({
       currentGame: newGame,
@@ -66,6 +67,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       ...currentGame,
       guesses: newGuesses,
       isComplete: isWon,
+      status: isWon ? 'won' : 'playing',
       ...(isWon && { completedAt: new Date() }),
     };
 
@@ -85,6 +87,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       guessResults: newResults,
       gameStatus: isWon ? 'won' : 'playing',
     });
+
+    if (isWon) {
+      // Emit event to update player stats
+      emitter.emit('GAME_WON', { playerId: currentGame.playerId, guessCount: newGuesses.length });
+    }
   },
 
   resetGame: () => {

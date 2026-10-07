@@ -1,5 +1,47 @@
-import { useState, useEffect, type ReactNode } from 'react';
+/* eslint-disable complexity */
+import { useState, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+interface GameResultAnimationProps {
+  gameStatus: 'won' | 'lost' | 'playing' | 'idle';
+  currentPlayer: { name: string } | null;
+  guesses: number[];
+  targetNumber: number;
+  onNewGame: () => void;
+}
+
+const GameResultAnimation = (
+  { gameStatus, currentPlayer, guesses, targetNumber, onNewGame }: GameResultAnimationProps
+) => {
+  if (!currentPlayer || (gameStatus !== 'won' && gameStatus !== 'lost')) return null;
+
+  const isWin = gameStatus === 'won';
+  const title = isWin
+    ? `🎉 Congratulations, ${currentPlayer.name}! 🎉`
+    : `😢 Game Over, ${currentPlayer.name}!`;
+  const message = isWin
+    ? `You found the number in ${guesses.length} ${guesses.length === 1 ? 'guess' : 'guesses'}!`
+    : `The number was ${targetNumber}.`;
+  const buttonText = isWin ? 'Play Again' : 'Try Again';
+  const titleColor = isWin ? 'text-green-400' : 'text-red-400';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      className="mt-6 text-center"
+    >
+      <p className={`text-2xl font-bold mb-4 ${titleColor}`}>
+        {title}
+      </p>
+      <p className="text-gray-300 mb-4">{message}</p>
+      <Button onClick={onNewGame} variant="secondary">
+        {buttonText}
+      </Button>
+    </motion.div>
+  );
+};
 import { Card } from '../UI/Card';
 import { Button } from '../UI/Button';
 import { GuessInput } from './GuessInput';
@@ -8,6 +50,8 @@ import { GameStats } from './GameStats';
 import { GameInsights } from '../Player/GameInsights';
 import { useGameStore } from '../../store/gameStore';
 import { usePlayerStore } from '../../store/playerStore';
+import type { Game } from '../../types';
+import { saveGames } from '../../utils/storage';
 
 type RightPanelTab = 'history' | 'stats';
 
@@ -39,20 +83,10 @@ const TabButton = ({ tab, activeTab, onSelect, children }: TabButtonProps) => {
 export const GameBoard = () => {
   const { gameStatus, startNewGame, resetGame, guesses, currentGame } = useGameStore();
 
-  const { currentPlayer, updatePlayerStats } = usePlayerStore();
+  const { currentPlayer } = usePlayerStore();
   const [activeTab, setActiveTab] = useState<RightPanelTab>('history');
 
-  // Update player stats when game is won
-  useEffect(() => {
-    if (gameStatus === 'won' && currentPlayer && currentGame?.isComplete) {
-      // Use game ID to ensure we only update once per game
-      const statsKey = `stats-updated-${currentGame.id}`;
-      if (!sessionStorage.getItem(statsKey)) {
-        updatePlayerStats(currentPlayer.id, currentGame.guesses.length);
-        sessionStorage.setItem(statsKey, 'true');
-      }
-    }
-  }, [gameStatus, currentGame, currentPlayer, updatePlayerStats]);
+  // Player stats are updated via the GAME_WON event in gameStore.ts
 
   // Guard against race conditions during win state
   if (gameStatus === 'won' && !currentPlayer) {
@@ -64,6 +98,34 @@ export const GameBoard = () => {
       resetGame();
       startNewGame(currentPlayer.id);
     }
+  };
+
+  const handleGiveUp = () => {
+    if (!currentGame || !currentPlayer) return;
+
+    const updatedGame: Game = {
+      ...currentGame,
+      isComplete: true,
+      status: 'lost',
+      completedAt: new Date(),
+    };
+
+    // Save to localStorage
+    const allGames = useGameStore.getState().loadGameHistory();
+    const gameIndex = allGames.findIndex((g) => g.id === currentGame.id);
+    if (gameIndex >= 0) {
+      allGames[gameIndex] = updatedGame;
+    } else {
+      allGames.push(updatedGame);
+    }
+    saveGames(allGames);
+
+    // Reset and start new game
+    useGameStore.getState().resetGame();
+    const { startNewGame } = useGameStore.getState();
+    startNewGame(currentPlayer.id);
+
+    // GAME_LOST event is emitted in gameStore.ts
   };
 
   if (!currentPlayer) {
@@ -99,29 +161,20 @@ export const GameBoard = () => {
 
         <div className="mt-8">
           <GuessInput />
+          <div className="mt-4 flex justify-center">
+            <Button onClick={handleGiveUp} variant="secondary" size="sm">
+              Give Up
+            </Button>
+          </div>
         </div>
 
-        <AnimatePresence>
-          {gameStatus === 'won' && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="mt-6 text-center"
-            >
-              <p className="text-2xl font-bold text-green-400 mb-4">
-                🎉 Congratulations, {currentPlayer.name}! 🎉
-              </p>
-              <p className="text-gray-300 mb-4">
-                You found the number in {guesses.length}{' '}
-                {guesses.length === 1 ? 'guess' : 'guesses'}!
-              </p>
-              <Button onClick={handleNewGame} variant="secondary">
-                Play Again
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <GameResultAnimation
+          gameStatus={gameStatus}
+          currentPlayer={currentPlayer}
+          guesses={guesses}
+          targetNumber={currentGame?.targetNumber || 0}
+          onNewGame={handleNewGame}
+        />
       </Card>
 
       <div className="space-y-4 order-2 flex flex-col h-full">

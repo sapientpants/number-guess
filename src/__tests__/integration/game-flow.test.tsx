@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, waitFor, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, cleanup, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Player } from '../../types';
 
@@ -303,7 +303,7 @@ describe('Game Flow Integration Tests', () => {
 
   describe('input validation in game context', () => {
     it('should prevent invalid inputs during gameplay', async () => {
-      render(<App />);
+      const { container } = render(<App />);
 
       // Quick setup
       await userEvent.click(screen.getByText('Create New Player'));
@@ -404,12 +404,22 @@ describe('Game Flow Integration Tests', () => {
       await waitFor(() => {
         const player = usePlayerStore.getState().currentPlayer;
         expect(player).toMatchObject({
-          gamesPlayed: 2,
-          gamesWon: 2,
-          totalGuesses: 5,
+          gamesPlayed: 2, // 2 wins
+          gamesWon: 2, // Only won games
+          totalGuesses: 5, // Only won games
           bestGame: 2,
           averageGuesses: 2.5,
         });
+      });
+
+      // Third game: lose
+      await userEvent.click(screen.getByRole('button', { name: 'Play Again' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Give Up' }));
+
+      // gamesWon should still be 2
+      await waitFor(() => {
+        const player = usePlayerStore.getState().currentPlayer;
+        expect(player?.gamesWon).toBe(2);
       });
     });
   });

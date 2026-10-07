@@ -19,6 +19,7 @@ const game = (guessCount: number, overrides: Partial<Game> = {}): Game => ({
   isComplete: true,
   startedAt: new Date('2026-01-01T00:00:00.000Z'),
   completedAt: new Date('2026-01-01T00:01:00.000Z'),
+  status: 'won',
   ...overrides,
 });
 
