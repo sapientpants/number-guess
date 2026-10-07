@@ -6,7 +6,7 @@ interface GameResultAnimationProps {
   gameStatus: 'won' | 'lost' | 'playing' | 'idle';
   currentPlayer: { name: string } | null;
   guesses: number[];
-  targetNumber?: number;
+  targetNumber: number;
   onNewGame: () => void;
 }
 
@@ -184,13 +184,27 @@ export const GameBoard = () => {
           </div>
         </div>
 
-        <GameResultAnimation
-          gameStatus={gameStatus}
-          currentPlayer={currentPlayer}
-          guesses={guesses}
-          targetNumber={currentGame?.targetNumber}
-          onNewGame={handleNewGame}
-        />
+        <AnimatePresence>
+          {gameStatus === 'won' && (
+            <GameResultAnimation
+              gameStatus={gameStatus}
+              currentPlayer={currentPlayer}
+              guesses={guesses}
+              targetNumber={currentGame?.targetNumber || 0}
+              onNewGame={handleNewGame}
+            />
+          )}
+
+          {gameStatus === 'lost' && currentGame?.targetNumber && (
+            <GameResultAnimation
+              gameStatus={gameStatus}
+              currentPlayer={currentPlayer}
+              guesses={guesses}
+              targetNumber={currentGame.targetNumber}
+              onNewGame={handleNewGame}
+            />
+          )}
+        </AnimatePresence>
       </Card>
 
       <div className="space-y-4 order-2 flex flex-col h-full">
