@@ -86,6 +86,6 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm install --frozen-lockfile
       - name: Install OSV-Scanner
-        run: pnpm add -D @google/osv-scanner
+        run: go install github.com/google/osv-scanner/cmd/osv-scanner@latest
       - name: Run OSV-Scanner
-        run: pnpm exec osv-scanner --lockfile=pnpm-lock.yaml --skip-git=true --fail-on-vuln=false
+        run: ~/go/bin/osv-scanner --lockfile=pnpm-lock.yaml --skip-git=true --fail-on-vuln=false
