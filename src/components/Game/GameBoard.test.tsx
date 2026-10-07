@@ -111,6 +111,9 @@ describe('GameBoard', () => {
   });
 
   it('should render lost state when game is lost', () => {
+    const mockLoadGameHistory = vi.fn().mockReturnValue([]);
+    const mockMakeGuess = vi.fn();
+
     mockUseGameStore.mockReturnValue({
       gameStatus: 'lost',
       currentGame: {
@@ -126,12 +129,44 @@ describe('GameBoard', () => {
       guesses: [10, 20, 30],
       guessResults: [],
       startNewGame: mockStartNewGame,
+      makeGuess: mockMakeGuess,
+      resetGame: mockResetGame,
+      loadGameHistory: mockLoadGameHistory,
+    });
+
+    render(<GameBoard />);
+    expect(screen.getByText(/Game Over, Alice!/)).toBeInTheDocument();
+
+    // Test handleGiveUp
+    const giveUpButton = screen.getByText('Give Up');
+    expect(giveUpButton).toBeInTheDocument();
+  });
+
+  it('should handle race condition when game is won but no current player', () => {
+    mockUseGameStore.mockReturnValue({
+      gameStatus: 'won',
+      currentGame: null,
+      targetNumber: 0,
+      guesses: [],
+      guessResults: [],
+      startNewGame: mockStartNewGame,
       makeGuess: vi.fn(),
       resetGame: mockResetGame,
       loadGameHistory: vi.fn().mockReturnValue([]),
     });
 
-    render(<GameBoard />);
-    expect(screen.getByText(/Game Over, Alice!/)).toBeInTheDocument();
+    mockUsePlayerStore.mockReturnValue({
+      players: [],
+      currentPlayer: null,
+      loadPlayers: vi.fn(),
+      createPlayer: vi.fn(),
+      selectPlayer: vi.fn(),
+      updatePlayerStats: vi.fn(),
+      incrementGamesPlayed: vi.fn(),
+      getCurrentPlayer: vi.fn().mockReturnValue(null),
+    });
+
+    const { container } = render(<GameBoard />);
+    expect(container.firstChild).toBeNull();
   });
 });
