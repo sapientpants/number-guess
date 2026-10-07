@@ -303,66 +303,64 @@ describe('Game Flow Integration Tests', () => {
 
   describe('input validation in game context', () => {
     it('should prevent invalid inputs during gameplay', async () => {
-      await act(async () => {
-        const { container } = render(<App />);
+      const { container } = render(<App />);
 
-        // Quick setup
-        await userEvent.click(screen.getByText('Create New Player'));
-        const nameInput = screen.getByPlaceholderText('Enter your name');
-        await userEvent.type(nameInput, 'Validation Test');
-        await userEvent.click(screen.getByRole('button', { name: 'Create Player' }));
+      // Quick setup
+      await userEvent.click(screen.getByText('Create New Player'));
+      const nameInput = screen.getByPlaceholderText('Enter your name');
+      await userEvent.type(nameInput, 'Validation Test');
+      await userEvent.click(screen.getByRole('button', { name: 'Create Player' }));
 
-        await waitFor(() => {
-          expect(screen.getByText('Start New Game')).toBeInTheDocument();
-        });
-
-        await userEvent.click(screen.getByRole('button', { name: 'Start New Game' }));
-
-        const guessInput = screen.getByPlaceholderText<HTMLInputElement>('Enter your guess (1-100)');
-        const form = screen.getByRole('form', { name: 'Number guess form' });
-
-        // Try invalid inputs (number input prevents alphabetic characters)
-        fireEvent.change(guessInput, { target: { value: 'abc' } });
-        expect(guessInput).toHaveValue(null);
-
-        fireEvent.change(guessInput, { target: { value: '150' } });
-        fireEvent.submit(form);
-
-        await waitFor(() => {
-          expect(screen.getByText('Number must be between 1 and 100')).toBeInTheDocument();
-        });
-
-        // Clear and try duplicate
-        fireEvent.change(guessInput, { target: { value: '25' } });
-        fireEvent.submit(form);
-
-        await waitFor(
-          () => {
-            expect(screen.getByText('↑ Too Low')).toBeInTheDocument();
-          },
-          { timeout: 3000 }
-        );
-
-        // Wait for form to be ready after the first guess
-        await waitFor(() => {
-          expect(guessInput.value).toBe('');
-        });
-
-        // Try same number again - this should be prevented
-        fireEvent.change(guessInput, { target: { value: '25' } });
-
-        // Wait for React Hook Form to register the value
-        await waitFor(() => {
-          expect(guessInput.value).toBe('25');
-        });
-
-        // Get the current guesses to verify 25 is already there
-        const guessHistory = screen.getAllByText('25');
-        expect(guessHistory.length).toBeGreaterThan(0);
-
-        // Now submit the duplicate - it should be rejected by the store
-        fireEvent.submit(form);
+      await waitFor(() => {
+        expect(screen.getByText('Start New Game')).toBeInTheDocument();
       });
+
+      await userEvent.click(screen.getByRole('button', { name: 'Start New Game' }));
+
+      const guessInput = screen.getByPlaceholderText<HTMLInputElement>('Enter your guess (1-100)');
+      const form = screen.getByRole('form', { name: 'Number guess form' });
+
+      // Try invalid inputs (number input prevents alphabetic characters)
+      fireEvent.change(guessInput, { target: { value: 'abc' } });
+      expect(guessInput).toHaveValue(null);
+
+      fireEvent.change(guessInput, { target: { value: '150' } });
+      fireEvent.submit(form);
+
+      await waitFor(() => {
+        expect(screen.getByText('Number must be between 1 and 100')).toBeInTheDocument();
+      });
+
+      // Clear and try duplicate
+      fireEvent.change(guessInput, { target: { value: '25' } });
+      fireEvent.submit(form);
+
+      await waitFor(
+        () => {
+          expect(screen.getByText('↑ Too Low')).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
+
+      // Wait for form to be ready after the first guess
+      await waitFor(() => {
+        expect(guessInput.value).toBe('');
+      });
+
+      // Try same number again - this should be prevented
+      fireEvent.change(guessInput, { target: { value: '25' } });
+
+      // Wait for React Hook Form to register the value
+      await waitFor(() => {
+        expect(guessInput.value).toBe('25');
+      });
+
+      // Get the current guesses to verify 25 is already there
+      const guessHistory = screen.getAllByText('25');
+      expect(guessHistory.length).toBeGreaterThan(0);
+
+      // Now submit the duplicate - it should be rejected by the store
+      fireEvent.submit(form);
 
       // Wait a moment to see if a new guess was added
       await new Promise((resolve) => setTimeout(resolve, 500));
