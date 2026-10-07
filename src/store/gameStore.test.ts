@@ -3,7 +3,7 @@ import { useGameStore } from './gameStore';
 import { usePlayerStore } from './playerStore';
 import * as gameLogic from '../utils/gameLogic';
 import { loadGames, saveGames } from '../utils/storage';
-import { emitter } from './eventEmitter';
+// import { emitter } from './eventEmitter'; // Disabled due to TypeScript issues
 import type { Game } from '../types';
 
 // vi.mock('./eventEmitter'); // Disabled due to TypeScript issues
