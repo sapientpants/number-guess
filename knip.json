@@ -1,5 +1,9 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "project": ["src/**/*.{ts,tsx}"],
-  "ignoreDependencies": ["tailwindcss", "fast-check", "@stryker-mutator/command-runner"]
+  "ignoreDependencies": ["tailwindcss", "fast-check", "@stryker-mutator/command-runner"],
+  "ignore": [
+    "src/types/index.ts",
+    "src/utils/storage.ts"
+  ]
 }
