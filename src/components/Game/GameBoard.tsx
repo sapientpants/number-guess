@@ -1,6 +1,63 @@
 /* eslint-disable complexity */
 import { useState, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+interface GameResultAnimationProps {
+  gameStatus: 'won' | 'lost' | 'playing' | 'idle';
+  currentPlayer: { name: string } | null;
+  guesses: number[];
+  targetNumber?: number;
+  onNewGame: () => void;
+}
+
+const GameResultAnimation = (
+  { gameStatus, currentPlayer, guesses, targetNumber, onNewGame }: GameResultAnimationProps
+) => {
+  if (!currentPlayer) return null;
+
+  if (gameStatus === 'won') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.8 }}
+        className="mt-6 text-center"
+      >
+        <p className="text-2xl font-bold text-green-400 mb-4">
+          🎉 Congratulations, {currentPlayer.name}! 🎉
+        </p>
+        <p className="text-gray-300 mb-4">
+          You found the number in {guesses.length}{' '}
+          {guesses.length === 1 ? 'guess' : 'guesses'}!
+        </p>
+        <Button onClick={onNewGame} variant="secondary">
+          Play Again
+        </Button>
+      </motion.div>
+    );
+  }
+
+  if (gameStatus === 'lost') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.8 }}
+        className="mt-6 text-center"
+      >
+        <p className="text-2xl font-bold text-red-400 mb-4">
+          😢 Game Over, {currentPlayer.name}!
+        </p>
+        <p className="text-gray-300 mb-4">The number was {targetNumber}.</p>
+        <Button onClick={onNewGame} variant="secondary">
+          Try Again
+        </Button>
+      </motion.div>
+    );
+  }
+
+  return null;
+};
 import { Card } from '../UI/Card';
 import { Button } from '../UI/Button';
 import { GuessInput } from './GuessInput';
@@ -127,44 +184,13 @@ export const GameBoard = () => {
           </div>
         </div>
 
-        <AnimatePresence>
-          {gameStatus === 'won' && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="mt-6 text-center"
-            >
-              <p className="text-2xl font-bold text-green-400 mb-4">
-                🎉 Congratulations, {currentPlayer.name}! 🎉
-              </p>
-              <p className="text-gray-300 mb-4">
-                You found the number in {guesses.length}{' '}
-                {guesses.length === 1 ? 'guess' : 'guesses'}!
-              </p>
-              <Button onClick={handleNewGame} variant="secondary">
-                Play Again
-              </Button>
-            </motion.div>
-          )}
-
-          {gameStatus === 'lost' && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="mt-6 text-center"
-            >
-              <p className="text-2xl font-bold text-red-400 mb-4">
-                😢 Game Over, {currentPlayer.name}!
-              </p>
-              <p className="text-gray-300 mb-4">The number was {currentGame?.targetNumber}.</p>
-              <Button onClick={handleNewGame} variant="secondary">
-                Try Again
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <GameResultAnimation
+          gameStatus={gameStatus}
+          currentPlayer={currentPlayer}
+          guesses={guesses}
+          targetNumber={currentGame?.targetNumber}
+          onNewGame={handleNewGame}
+        />
       </Card>
 
       <div className="space-y-4 order-2 flex flex-col h-full">
