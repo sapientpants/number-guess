@@ -3,7 +3,7 @@ import { useGameStore } from './gameStore';
 import { usePlayerStore } from './playerStore';
 import * as gameLogic from '../utils/gameLogic';
 import { loadGames, saveGames } from '../utils/storage';
-import { emitter, type GameEvents } from './eventEmitter';
+import { emitter } from './eventEmitter';
 import type { Game } from '../types';
 
 vi.mock('./eventEmitter');
@@ -27,14 +27,11 @@ describe('gameStore', () => {
     });
 
     vi.clearAllMocks();
-    vi.mocked(emitter.emit).mockImplementation((event, data) => {
-      if (event === 'GAME_STARTED')
-        mockIncrementGamesPlayed((data as { playerId: string }).playerId);
-      if (event === 'GAME_WON')
-        mockUpdatePlayerStats(
-          (data as { playerId: string }).playerId,
-          (data as { guessCount: number }).guessCount
-        );
+    vi.mocked(emitter.emit).mockImplementation((event: string, data: unknown) => {
+      if (event === 'GAME_STARTED' && typeof data === 'object' && data && 'playerId' in data)
+        mockIncrementGamesPlayed(data.playerId);
+      if (event === 'GAME_WON' && typeof data === 'object' && data && 'playerId' in data && 'guessCount' in data)
+        mockUpdatePlayerStats(data.playerId, data.guessCount);
     });
 
     // Mock playerStore with complete interface
