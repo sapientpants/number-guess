@@ -3,10 +3,10 @@ import { useGameStore } from './gameStore';
 import { usePlayerStore } from './playerStore';
 import * as gameLogic from '../utils/gameLogic';
 import { loadGames, saveGames } from '../utils/storage';
-// import { emitter } from './eventEmitter'; // Disabled due to TypeScript issues
+import { emitter } from './eventEmitter';
 import type { Game } from '../types';
 
-// vi.mock('./eventEmitter'); // Disabled due to TypeScript issues
+vi.mock('./eventEmitter');
 
 vi.mock('./playerStore');
 vi.mock('../utils/gameLogic');
@@ -27,6 +27,12 @@ describe('gameStore', () => {
     });
 
     vi.clearAllMocks();
+    vi.mocked(emitter.emit).mockImplementation((event: string, data: unknown) => {
+      if (event === 'GAME_STARTED' && typeof data === 'object' && data && 'playerId' in data)
+        mockIncrementGamesPlayed(data.playerId);
+      if (event === 'GAME_WON' && typeof data === 'object' && data && 'playerId' in data && 'guessCount' in data)
+        mockUpdatePlayerStats(data.playerId, data.guessCount);
+    });
 
     // Mock playerStore with complete interface
     vi.mocked(usePlayerStore.getState).mockReturnValue({
