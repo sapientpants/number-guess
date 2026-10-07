@@ -13,50 +13,34 @@ interface GameResultAnimationProps {
 const GameResultAnimation = (
   { gameStatus, currentPlayer, guesses, targetNumber, onNewGame }: GameResultAnimationProps
 ) => {
-  if (!currentPlayer) return null;
+  if (!currentPlayer || (gameStatus !== 'won' && gameStatus !== 'lost')) return null;
 
-  if (gameStatus === 'won') {
-    return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.8 }}
-        className="mt-6 text-center"
-      >
-        <p className="text-2xl font-bold text-green-400 mb-4">
-          🎉 Congratulations, {currentPlayer.name}! 🎉
-        </p>
-        <p className="text-gray-300 mb-4">
-          You found the number in {guesses.length}{' '}
-          {guesses.length === 1 ? 'guess' : 'guesses'}!
-        </p>
-        <Button onClick={onNewGame} variant="secondary">
-          Play Again
-        </Button>
-      </motion.div>
-    );
-  }
+  const isWin = gameStatus === 'won';
+  const title = isWin
+    ? `🎉 Congratulations, ${currentPlayer.name}! 🎉`
+    : `😢 Game Over, ${currentPlayer.name}!`;
+  const message = isWin
+    ? `You found the number in ${guesses.length} ${guesses.length === 1 ? 'guess' : 'guesses'}!`
+    : `The number was ${targetNumber}.`;
+  const buttonText = isWin ? 'Play Again' : 'Try Again';
+  const titleColor = isWin ? 'text-green-400' : 'text-red-400';
 
-  if (gameStatus === 'lost') {
-    return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.8 }}
-        className="mt-6 text-center"
-      >
-        <p className="text-2xl font-bold text-red-400 mb-4">
-          😢 Game Over, {currentPlayer.name}!
-        </p>
-        <p className="text-gray-300 mb-4">The number was {targetNumber}.</p>
-        <Button onClick={onNewGame} variant="secondary">
-          Try Again
-        </Button>
-      </motion.div>
-    );
-  }
-
-  return null;
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      className="mt-6 text-center"
+    >
+      <p className={`text-2xl font-bold mb-4 ${titleColor}`}>
+        {title}
+      </p>
+      <p className="text-gray-300 mb-4">{message}</p>
+      <Button onClick={onNewGame} variant="secondary">
+        {buttonText}
+      </Button>
+    </motion.div>
+  );
 };
 import { Card } from '../UI/Card';
 import { Button } from '../UI/Button';
