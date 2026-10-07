@@ -12,12 +12,11 @@ export default defineConfig({
         resources: 'usable',
       },
     },
-    // Treat "act" warnings as non-fatal
-    onConsoleLog(log) {
-      if (log.includes('was not wrapped in act')) {
-        return false; // Suppress the warning
-      }
-      return true;
+    pool: 'threads',
+    poolOptions: {
+      threads: {
+        singleThread: true,
+      },
     },
   },
 });
