@@ -85,10 +85,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm install --frozen-lockfile
+      - name: Install OSV-Scanner
+        run: pnpm add -D @google/osv-scanner
       - name: Run OSV-Scanner
-        uses: google/osv-scanner-action/osv-scanner-action@7f58dd6750d78fc29a900ba64b1a0f946f62fba4 # v2.6.0
-        with:
-          scan-args: |-
-            --lockfile=pnpm-lock.yaml
-            --skip-git=true
-            --fail-on-vuln=false
+        run: pnpm exec osv-scanner --lockfile=pnpm-lock.yaml --skip-git=true --fail-on-vuln=false

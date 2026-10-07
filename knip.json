@@ -3,7 +3,7 @@
   "project": ["src/**/*.{ts,tsx}"],
   "ignoreDependencies": ["tailwindcss", "fast-check", "@stryker-mutator/command-runner"],
   "ignore": [
-    "src/types/index.ts",
+    "src/types/**",
     "src/utils/storage.ts"
   ]
 }
