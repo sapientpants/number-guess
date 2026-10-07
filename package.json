@@ -29,7 +29,7 @@
     "format:check": "prettier --check .",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage --no-threads",
+    "test:coverage": "vitest run --coverage --single-thread",
     "mutation-test": "stryker run",
     "dead-code": "knip",
     "duplication": "jscpd src",
