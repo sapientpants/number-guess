@@ -12,5 +12,12 @@ export default defineConfig({
         resources: 'usable',
       },
     },
+    // Treat "act" warnings as non-fatal
+    chaiConfig: {
+      truncateThreshold: 0,
+    },
+    sequence: {
+      hooks: 'stack',
+    },
   },
 });
