@@ -27,15 +27,13 @@ describe('gameStore', () => {
     });
 
     vi.clearAllMocks();
-    const mockEmit = vi.fn<(event: keyof GameEvents, data: unknown) => void>();
-    vi.spyOn(emitter, 'emit').mockImplementation(mockEmit);
     vi.mocked(emitter.emit).mockImplementation((event, data) => {
       if (event === 'GAME_STARTED')
-        mockIncrementGamesPlayed((data as GameEvents['GAME_STARTED']).playerId);
+        mockIncrementGamesPlayed((data as { playerId: string }).playerId);
       if (event === 'GAME_WON')
         mockUpdatePlayerStats(
-          (data as GameEvents['GAME_WON']).playerId,
-          (data as GameEvents['GAME_WON']).guessCount
+          (data as { playerId: string }).playerId,
+          (data as { guessCount: number }).guessCount
         );
     });
 
