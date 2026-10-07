@@ -184,27 +184,13 @@ export const GameBoard = () => {
           </div>
         </div>
 
-        <AnimatePresence>
-          {gameStatus === 'won' && (
-            <GameResultAnimation
-              gameStatus={gameStatus}
-              currentPlayer={currentPlayer}
-              guesses={guesses}
-              targetNumber={currentGame?.targetNumber || 0}
-              onNewGame={handleNewGame}
-            />
-          )}
-
-          {gameStatus === 'lost' && currentGame?.targetNumber && (
-            <GameResultAnimation
-              gameStatus={gameStatus}
-              currentPlayer={currentPlayer}
-              guesses={guesses}
-              targetNumber={currentGame.targetNumber}
-              onNewGame={handleNewGame}
-            />
-          )}
-        </AnimatePresence>
+        <GameResultAnimation
+          gameStatus={gameStatus}
+          currentPlayer={currentPlayer}
+          guesses={guesses}
+          targetNumber={currentGame?.targetNumber || 0}
+          onNewGame={handleNewGame}
+        />
       </Card>
 
       <div className="space-y-4 order-2 flex flex-col h-full">
