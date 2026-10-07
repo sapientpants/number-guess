@@ -6,7 +6,7 @@ import { loadGames, saveGames } from '../utils/storage';
 import { emitter } from './eventEmitter';
 import type { Game } from '../types';
 
-vi.mock('./eventEmitter');
+// vi.mock('./eventEmitter'); // Disabled due to TypeScript issues
 
 vi.mock('./playerStore');
 vi.mock('../utils/gameLogic');
