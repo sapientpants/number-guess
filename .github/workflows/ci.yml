@@ -36,6 +36,9 @@ jobs:
       - uses: ./.github/actions/setup
       # Fails if any coverage metric drops below the thresholds in vitest.config.ts.
       - run: pnpm run test:coverage
+        env:
+          VITEST_SEGFAULT_RETRY: 3
+          CI: true
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v7
