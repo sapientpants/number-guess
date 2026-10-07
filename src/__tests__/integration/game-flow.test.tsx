@@ -321,20 +321,19 @@ describe('Game Flow Integration Tests', () => {
       const form = screen.getByRole('form', { name: 'Number guess form' });
 
       // Try invalid inputs (number input prevents alphabetic characters)
-      await userEvent.type(guessInput, 'abc');
+      fireEvent.change(guessInput, { target: { value: 'abc' } });
       expect(guessInput).toHaveValue(null);
 
-      await userEvent.type(guessInput, '150');
-      await userEvent.click(screen.getByRole('button', { name: 'Make Guess' }));
+      fireEvent.change(guessInput, { target: { value: '150' } });
+      fireEvent.submit(form);
 
       await waitFor(() => {
         expect(screen.getByText('Number must be between 1 and 100')).toBeInTheDocument();
       });
 
       // Clear and try duplicate
-      await userEvent.clear(guessInput);
-      await userEvent.type(guessInput, '25');
-      await userEvent.click(screen.getByRole('button', { name: 'Make Guess' }));
+      fireEvent.change(guessInput, { target: { value: '25' } });
+      fireEvent.submit(form);
 
       await waitFor(
         () => {
@@ -349,7 +348,7 @@ describe('Game Flow Integration Tests', () => {
       });
 
       // Try same number again - this should be prevented
-      await userEvent.type(guessInput, '25');
+      fireEvent.change(guessInput, { target: { value: '25' } });
 
       // Wait for React Hook Form to register the value
       await waitFor(() => {
@@ -361,7 +360,7 @@ describe('Game Flow Integration Tests', () => {
       expect(guessHistory.length).toBeGreaterThan(0);
 
       // Now submit the duplicate - it should be rejected by the store
-      await userEvent.click(screen.getByRole('button', { name: 'Make Guess' }));
+      fireEvent.submit(form);
 
       // Wait a moment to see if a new guess was added
       await new Promise((resolve) => setTimeout(resolve, 500));

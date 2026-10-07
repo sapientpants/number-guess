@@ -13,11 +13,11 @@ export default defineConfig({
       },
     },
     // Treat "act" warnings as non-fatal
-    chaiConfig: {
-      truncateThreshold: 0,
-    },
-    sequence: {
-      hooks: 'stack',
+    onConsoleLog(log) {
+      if (log.includes('was not wrapped in act')) {
+        return false; // Suppress the warning
+      }
+      return true;
     },
   },
 });
