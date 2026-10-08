@@ -12,7 +12,9 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
+  actions: read
   contents: read
+  security-events: write
 
 jobs:
   validate:
@@ -73,14 +75,15 @@ jobs:
 
   osv-scan:
     name: OSV vulnerability scan
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v7
-      - name: Run OSV-Scanner
-        uses: docker://ghcr.io/google/osv-scanner:v2.6.0
-        with:
-          args: scan --lockfile=pnpm-lock.yaml --fail-on-vuln=true
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.3.8
+    with:
+      # Scan entire project including all manifests (package.json, pnpm-lock.yaml)
+      scan-args: |-
+        ./
+    permissions:
+      security-events: write # Required to upload findings to Security tab
+      actions: read
+      contents: read
 
   # audit:
   #   name: Dependency audit
