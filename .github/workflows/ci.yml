@@ -80,7 +80,7 @@ jobs:
       - name: Run OSV-Scanner
         uses: docker://ghcr.io/google/osv-scanner:v2.6.0
         with:
-          args: scan --lockfile=pnpm-lock.yaml --skip-git=true --fail-on-vuln=true
+          args: scan --lockfile=pnpm-lock.yaml --fail-on-vuln=true
 
   # audit:
   #   name: Dependency audit
