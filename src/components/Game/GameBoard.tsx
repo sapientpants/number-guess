@@ -1,4 +1,3 @@
-/* eslint-disable complexity */
 import { useState, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -10,9 +9,13 @@ interface GameResultAnimationProps {
   onNewGame: () => void;
 }
 
-const GameResultAnimation = (
-  { gameStatus, currentPlayer, guesses, targetNumber, onNewGame }: GameResultAnimationProps
-) => {
+const GameResultAnimation = ({
+  gameStatus,
+  currentPlayer,
+  guesses,
+  targetNumber,
+  onNewGame,
+}: GameResultAnimationProps) => {
   if (!currentPlayer || (gameStatus !== 'won' && gameStatus !== 'lost')) return null;
 
   const isWin = gameStatus === 'won';
@@ -20,7 +23,10 @@ const GameResultAnimation = (
     ? `🎉 Congratulations, ${currentPlayer.name}! 🎉`
     : `😢 Game Over, ${currentPlayer.name}!`;
   const message = isWin
-    ? `You found the number in ${guesses.length} ${guesses.length === 1 ? 'guess' : 'guesses'}!`
+    ? (() => {
+        const guessText = guesses.length === 1 ? 'guess' : 'guesses';
+        return `You found the number in ${guesses.length} ${guessText}!`;
+      })()
     : `The number was ${targetNumber}.`;
   const buttonText = isWin ? 'Play Again' : 'Try Again';
   const titleColor = isWin ? 'text-green-400' : 'text-red-400';
@@ -32,9 +38,7 @@ const GameResultAnimation = (
       exit={{ opacity: 0, scale: 0.8 }}
       className="mt-6 text-center"
     >
-      <p className={`text-2xl font-bold mb-4 ${titleColor}`}>
-        {title}
-      </p>
+      <p className={`text-2xl font-bold mb-4 ${titleColor}`}>{title}</p>
       <p className="text-gray-300 mb-4">{message}</p>
       <Button onClick={onNewGame} variant="secondary">
         {buttonText}
@@ -172,7 +176,7 @@ export const GameBoard = () => {
           gameStatus={gameStatus}
           currentPlayer={currentPlayer}
           guesses={guesses}
-          targetNumber={currentGame?.targetNumber || 0}
+          targetNumber={currentGame?.targetNumber ?? 0}
           onNewGame={handleNewGame}
         />
       </Card>

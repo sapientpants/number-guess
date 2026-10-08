@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, waitFor, fireEvent, cleanup, act } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Player } from '../../types';
 
@@ -303,7 +303,7 @@ describe('Game Flow Integration Tests', () => {
 
   describe('input validation in game context', () => {
     it('should prevent invalid inputs during gameplay', async () => {
-      const { container } = render(<App />);
+      render(<App />);
 
       // Quick setup
       await userEvent.click(screen.getByText('Create New Player'));

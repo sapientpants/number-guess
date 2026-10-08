@@ -12,11 +12,5 @@ export default defineConfig({
         resources: 'usable',
       },
     },
-    pool: 'threads',
-    poolOptions: {
-      threads: {
-        singleThread: true,
-      },
-    },
   },
 });
