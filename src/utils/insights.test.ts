@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { fc, test } from '@fast-check/vitest';
+import { describe, it, expect, test } from 'vitest';
+import fc from 'fast-check';
 import {
   calculateStreaks,
   calculateWinRate,
@@ -66,17 +66,22 @@ describe('calculateStreaks', () => {
     expect(calculateStreaks([game(9), game(9)], 5)).toEqual({ currentStreak: 0, bestStreak: 0 });
   });
 
-  test.prop([fc.array(fc.integer({ min: 1, max: 20 })), fc.integer({ min: 1, max: 20 })])(
-    'current streak never exceeds best streak or the number of games',
-    (guessCounts, average) => {
-      const { currentStreak, bestStreak } = calculateStreaks(
-        guessCounts.map((n) => game(n)),
-        average
-      );
-      expect(bestStreak).toBeLessThanOrEqual(guessCounts.length);
-      expect(currentStreak).toBeLessThanOrEqual(bestStreak);
-    }
-  );
+  test('current streak never exceeds best streak or the number of games', () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.integer({ min: 1, max: 20 })),
+        fc.integer({ min: 1, max: 20 }),
+        (guessCounts, average) => {
+          const { currentStreak, bestStreak } = calculateStreaks(
+            guessCounts.map((n) => game(n)),
+            average
+          );
+          expect(bestStreak).toBeLessThanOrEqual(guessCounts.length);
+          expect(currentStreak).toBeLessThanOrEqual(bestStreak);
+        }
+      )
+    );
+  });
 });
 
 describe('getPerformanceTier', () => {

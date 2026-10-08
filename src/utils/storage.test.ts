@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
-import { fc, test } from '@fast-check/vitest';
+import { describe, it, expect, vi, afterEach, test } from 'vitest';
+import fc from 'fast-check';
 import {
   calculateLeaderboard,
   clearCurrentPlayerId,
@@ -220,24 +220,40 @@ const playerArb: fc.Arbitrary<Player> = fc.record({
 });
 
 describe('storage properties', () => {
-  test.prop([fc.array(playerArb)])('any saved players load back unchanged', (players) => {
-    savePlayers(players);
-    expect(loadPlayers()).toEqual(players);
+  test('any saved players load back unchanged', () => {
+    fc.assert(
+      fc.property(fc.array(playerArb), (players) => {
+        savePlayers(players);
+        expect(loadPlayers()).toEqual(players);
+      })
+    );
   });
 
-  test.prop([fc.anything()])('parsePlayer never throws on arbitrary input', (value) => {
-    expect(() => parsePlayer(value)).not.toThrow();
+  test('parsePlayer never throws on arbitrary input', () => {
+    fc.assert(
+      fc.property(fc.anything(), (value) => {
+        expect(() => parsePlayer(value)).not.toThrow();
+      })
+    );
   });
 
-  test.prop([fc.anything()])('parseGame never throws on arbitrary input', (value) => {
-    expect(() => parseGame(value)).not.toThrow();
+  test('parseGame never throws on arbitrary input', () => {
+    fc.assert(
+      fc.property(fc.anything(), (value) => {
+        expect(() => parseGame(value)).not.toThrow();
+      })
+    );
   });
 
-  test.prop([fc.string()])('loading arbitrary stored text never throws', (raw) => {
-    localStorage.setItem(PLAYERS_KEY, raw);
-    localStorage.setItem(GAMES_KEY, raw);
-    expect(() => loadPlayers()).not.toThrow();
-    expect(() => loadGames()).not.toThrow();
+  test('loading arbitrary stored text never throws', () => {
+    fc.assert(
+      fc.property(fc.string(), (raw) => {
+        localStorage.setItem(PLAYERS_KEY, raw);
+        localStorage.setItem(GAMES_KEY, raw);
+        expect(() => loadPlayers()).not.toThrow();
+        expect(() => loadGames()).not.toThrow();
+      })
+    );
   });
 });
 
@@ -268,19 +284,20 @@ describe('calculateLeaderboard', () => {
     expect(players).toEqual(snapshot);
   });
 
-  test.prop([fc.array(playerArb, { maxLength: 30 })])(
-    'returns at most 10 sorted, contiguously ranked players who have played',
-    (players) => {
-      const entries = calculateLeaderboard(players);
-      const eligible = players.filter((p) => p.gamesPlayed > 0);
+  test('returns at most 10 sorted, contiguously ranked players who have played', () => {
+    fc.assert(
+      fc.property(fc.array(playerArb, { maxLength: 30 }), (players) => {
+        const entries = calculateLeaderboard(players);
+        const eligible = players.filter((p) => p.gamesPlayed > 0);
 
-      expect(entries).toHaveLength(Math.min(10, eligible.length));
-      entries.forEach((entry, index) => {
-        expect(entry.rank).toBe(index + 1);
-        expect(entry.gamesPlayed).toBeGreaterThan(0);
-        const next = entries[index + 1];
-        if (next) expect(entry.averageGuesses).toBeLessThanOrEqual(next.averageGuesses);
-      });
-    }
-  );
+        expect(entries).toHaveLength(Math.min(10, eligible.length));
+        entries.forEach((entry, index) => {
+          expect(entry.rank).toBe(index + 1);
+          expect(entry.gamesPlayed).toBeGreaterThan(0);
+          const next = entries[index + 1];
+          if (next) expect(entry.averageGuesses).toBeLessThanOrEqual(next.averageGuesses);
+        });
+      })
+    );
+  });
 });

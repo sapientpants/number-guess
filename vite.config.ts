@@ -5,12 +5,4 @@ import tailwindcss from '@tailwindcss/vite';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  test: {
-    environmentOptions: {
-      jsdom: {
-        // Suppress "act" warnings in tests
-        resources: 'usable',
-      },
-    },
-  },
 });
