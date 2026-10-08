@@ -39,7 +39,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
   });
 
   emitter.on('GAME_WON', ({ playerId, guessCount }) => {
-    get().updatePlayerStats(playerId, guessCount);
+    if (guessCount !== undefined) {
+      get().updatePlayerStats(playerId, guessCount);
+    }
   });
 
   emitter.on('GAME_LOST', ({ playerId }) => {
