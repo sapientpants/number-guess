@@ -85,6 +85,15 @@ jobs:
       actions: read
       contents: read
 
+  quality-gate:
+    name: Quality Gate
+    needs: [validate, test, quality, workflows, osv-scan]
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: All checks passed
+        run: echo "All quality checks passed - PR is ready for merge"
+
   # audit:
   #   name: Dependency audit
   #   runs-on: ubuntu-latest
