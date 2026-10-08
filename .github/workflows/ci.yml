@@ -71,6 +71,17 @@ jobs:
         with:
           args: -color
 
+  osv-scan:
+    name: OSV vulnerability scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Run OSV-Scanner
+        uses: docker://ghcr.io/google/osv-scanner:v2.6.0
+        with:
+          args: scan --lockfile=pnpm-lock.yaml --skip-git=true --fail-on-vuln=false
+
   # audit:
   #   name: Dependency audit
   #   runs-on: ubuntu-latest
